@@ -121,7 +121,7 @@ export function StatsCards({ stats = defaultStats }: { stats?: StatCardProps[] }
         return (
           <div
             key={idx}
-            className="flex flex-col justify-between p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+            className="flex flex-col justify-between p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300"
           >
             {/* Header: Icon + Title */}
             <div className="flex items-start gap-2.5 mb-4">

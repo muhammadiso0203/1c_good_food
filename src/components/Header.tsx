@@ -59,7 +59,7 @@ export function Header({
   }
 
   return (
-    <header className="w-full bg-[#090d16] border-b border-zinc-800/60 px-8 py-5 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-lg backdrop-blur-md">
+    <header className="w-full bg-[#090d16] border-b border-zinc-800/60 px-8 py-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-bold tracking-wide text-zinc-100 uppercase">
           {title}
@@ -84,7 +84,7 @@ export function Header({
                 <CalendarIcon className="h-4.5 w-4.5 text-zinc-400 shrink-0 ml-2" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-950 border-zinc-800 text-zinc-200 shadow-2xl rounded-lg" align="end">
+            <PopoverContent className="w-auto p-0 bg-zinc-950 border-zinc-800 text-zinc-200 rounded-lg" align="end">
               <Calendar
                 mode="range"
                 month={month}
@@ -106,7 +106,7 @@ export function Header({
             <SelectTrigger className="w-full h-10 px-3 bg-zinc-900/40 border-zinc-800 text-zinc-200 hover:bg-zinc-900/80 hover:text-zinc-100 hover:border-zinc-700 transition-all rounded-md focus:ring-0 focus:ring-offset-0">
               <SelectValue placeholder="Выберите филиал" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200 shadow-2xl rounded-md">
+            <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200 rounded-md">
               <SelectItem value="all" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
                 Все филиалы
               </SelectItem>
