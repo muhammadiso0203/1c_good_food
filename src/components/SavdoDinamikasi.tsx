@@ -35,7 +35,7 @@ export function SavdoDinamikasi() {
         // Keep a minimum width of 300, height responsive but bounded
         setDimensions({
           width: Math.max(width, 300),
-          height: 320,
+          height: 175,
         })
       }
     })
@@ -46,8 +46,8 @@ export function SavdoDinamikasi() {
   // Padding inside the SVG
   const paddingLeft = 40
   const paddingRight = 65
-  const paddingTop = 40
-  const paddingBottom = 40
+  const paddingTop = 20
+  const paddingBottom = 25
 
   const chartWidth = dimensions.width - paddingLeft - paddingRight
   const chartHeight = dimensions.height - paddingTop - paddingBottom
@@ -127,10 +127,10 @@ export function SavdoDinamikasi() {
   }
 
   return (
-    <div className="w-full px-3 mt-6">
+    <div className="w-full h-full">
       <div
         ref={containerRef}
-        className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none"
+        className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none h-full"
       >
         {/* Header Title */}
         <div className="flex flex-col gap-3 mb-5">

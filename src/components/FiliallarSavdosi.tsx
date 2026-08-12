@@ -58,7 +58,7 @@ export function FiliallarSavdosi() {
   }
 
   return (
-    <div className="w-full px-3 mt-6">
+    <div className="w-full h-full">
       <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5">
         {/* Sarlavha qismi */}
         <div className="mb-5 pb-3 border-b border-zinc-800/40">
@@ -68,18 +68,18 @@ export function FiliallarSavdosi() {
         </div>
 
         {/* Jadval qismi */}
-        <div>
-          <table className="w-full min-w-175 border-collapse text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-zinc-800/30 text-[10px] uppercase tracking-wider text-zinc-500">
-                <th className="py-3 px-4">ФИЛИАЛ</th>
-                <th className="py-3 px-4 text-right">СЕГОДНЯ, СУМ</th>
-                <th className="py-3 px-4 text-right">МЕСЯЦ, СУМ</th>
-                <th className="py-3 px-4 text-right">ПЛАН, СУМ</th>
-                <th className="py-3 px-4 text-right w-62.5">ВЫПОЛНЕНИЕ, %</th>
+                <th className="py-3 px-2">ФИЛИАЛ</th>
+                <th className="py-3 px-2 text-right">СЕГОДНЯ, СУМ</th>
+                <th className="py-3 px-2 text-right">МЕСЯЦ, СУМ</th>
+                <th className="py-3 px-2 text-right">ПЛАН, СУМ</th>
+                <th className="py-3 px-2 text-right">ВЫПОЛНЕНИЕ, %</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/20 text-sm">
+            <tbody className="divide-y divide-zinc-800/20 text-xs">
               {defaultData.map((item, idx) => {
                 const rang = getRangKlassi(item.bajarilish)
                 return (
@@ -87,24 +87,24 @@ export function FiliallarSavdosi() {
                     key={idx}
                     className="hover:bg-zinc-800/20 transition-colors duration-250"
                   >
-                    <td className="py-3.5 px-4 text-zinc-200 text-sm">
+                    <td className="py-3 px-2 text-zinc-200 font-medium">
                       {item.nomi}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-zinc-300">
+                    <td className="py-3 px-2 text-right text-zinc-300">
                       {formatSuma(item.bugun)}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-zinc-300">
+                    <td className="py-3 px-2 text-right text-zinc-300">
                       {formatSuma(item.oy)}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-zinc-400">
+                    <td className="py-3 px-2 text-right text-zinc-400">
                       {formatSuma(item.reja)}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <span className={`text-sm w-9 text-right ${rang.text}`}>
+                    <td className="py-3 px-2 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className={`text-xs w-8 text-right font-medium ${rang.text}`}>
                           {item.bajarilish}%
                         </span>
-                        <div className="w-24 bg-gray-700 h-4 rounded-sm overflow-hidden shrink-0 border border-zinc-800/60">
+                        <div className="w-16 sm:w-20 bg-gray-700 h-3 rounded-sm overflow-hidden shrink-0 border border-zinc-800/60">
                           <div
                             className={`h-full rounded-sm transition-all duration-500 ${rang.bg}`}
                             style={{ width: `${item.bajarilish}%` }}
@@ -118,24 +118,24 @@ export function FiliallarSavdosi() {
 
               {/* JAMI satri */}
               <tr className="bg-zinc-800/10 border-t-2 border-zinc-800/60">
-                <td className="py-4 px-4 text-zinc-100 uppercase text-xs tracking-wider">
+                <td className="py-3 px-2 text-zinc-100 uppercase text-[11px] font-bold tracking-wider">
                   ИТОГО
                 </td>
-                <td className="py-4 px-4 text-right text-zinc-100 tracking-tight">
+                <td className="py-3 px-2 text-right text-zinc-100 font-semibold text-xs tracking-tight">
                   {formatSuma(jamiBugun)}
                 </td>
-                <td className="py-4 px-4 text-right text-zinc-100 tracking-tight">
+                <td className="py-3 px-2 text-right text-zinc-100 font-semibold text-xs tracking-tight">
                   {formatSuma(jamiOy)}
                 </td>
-                <td className="py-4 px-4 text-right text-zinc-400 tracking-tight">
+                <td className="py-3 px-2 text-right text-zinc-400 font-semibold text-xs tracking-tight">
                   {formatSuma(jamiReja)}
                 </td>
-                <td className="py-4 px-4 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <span className={`text-sm w-9 text-right ${getRangKlassi(jamiBajarilish).text}`}>
+                <td className="py-3 px-2 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <span className={`text-xs w-8 text-right font-bold ${getRangKlassi(jamiBajarilish).text}`}>
                       {jamiBajarilish}%
                     </span>
-                    <div className="w-24 bg-gray-700 h-4 rounded-sm overflow-hidden shrink-0 border border-zinc-800/60">
+                    <div className="w-16 sm:w-20 bg-gray-700 h-3 rounded-sm overflow-hidden shrink-0 border border-zinc-800/60">
                       <div
                         className={`h-full rounded-sm transition-all duration-500 ${getRangKlassi(jamiBajarilish).bg}`}
                         style={{ width: `${jamiBajarilish}%` }}

@@ -28,8 +28,8 @@ export function TopTovari() {
   const maxValue = Math.max(...data.map((item) => item.value))
 
   return (
-    <div className="w-full px-3 mt-6">
-      <div className="h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none flex flex-col">
+    <div className="w-full h-full">
+      <div className="h-66 bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none flex flex-col">
         {/* Header Title */}
         <div className="pb-2">
           <h2 className="text-[9px] font-semibold  text-zinc-400 uppercase leading-none">
@@ -50,7 +50,7 @@ export function TopTovari() {
             return (
               <div
                 key={index}
-                className="grid grid-cols-12 gap-3 py-2 items-center rounded-md bg-zinc-800/20"
+                className="grid grid-cols-12 gap-3 items-center rounded-md bg-zinc-800/20"
               >
                 {/* Rank and Name */}
                 <div className="col-span-4 flex items-center gap-2">

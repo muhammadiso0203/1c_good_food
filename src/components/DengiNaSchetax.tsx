@@ -33,7 +33,7 @@ export function DengiNaSchetax() {
   const totalKassa = data.reduce((sum, item) => sum + item.kassa, 0) // 75 480 000
 
   return (
-    <div className="w-full px-3 mt-6">
+    <div className="w-full h-full">
       <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
         {/* Header Title */}
         <div className="mb-5 pb-3 border-b border-zinc-800/40">

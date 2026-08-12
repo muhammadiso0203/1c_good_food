@@ -46,7 +46,7 @@ export function StatusOstatkov() {
   const totalSKU = data.reduce((sum, item) => sum + item.sku, 0) // 4826
 
   return (
-    <div className="w-full px-3 mt-6">
+    <div className="w-full h-full">
       <div className="h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
         {/* Header Title */}
         <div className="mb-6 pb-3 border-b border-zinc-800/40">
@@ -58,15 +58,15 @@ export function StatusOstatkov() {
         {/* Content Layout */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8 min-h-40">
           {/* Left Side: Recharts Doughnut Chart */}
-          <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
+          <div className="relative w-30 h-30 flex items-center justify-center shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={73}
+                  innerRadius={45}
+                  outerRadius={60}
                   paddingAngle={0}
                   dataKey="sku"
                   startAngle={90}
@@ -103,14 +103,14 @@ export function StatusOstatkov() {
                 className={`flex items-start gap-3 p-1.5 -mx-1.5 rounded-lg transition-all duration-200`}
               >
                 {/* Colored square indicator */}
-                <span className={`w-3.5 h-3.5 rounded-[3px] shrink-0 mt-0.5 ${item.bgKlass}`} />
+                <span className={`w-3 h-3 rounded-[3px] shrink-0 mt-0.5 ${item.bgKlass}`} />
 
                 {/* Text info */}
                 <div className="flex flex-col leading-tight">
-                  <span className="text-zinc-400 text-xs font-semibold">
+                  <span className="text-zinc-400 text-[8px] font-semibold">
                     {item.status}
                   </span>
-                  <span className="text-zinc-100 text-sm font-bold mt-0.5">
+                  <span className="text-zinc-100 text-[8px] font-bold mt-0.5">
                     {formatNumber(item.sku)} ({item.foiz}%)
                   </span>
                 </div>

@@ -42,8 +42,8 @@ export function OstatkiTovara() {
   const totalOstatok = data.reduce((sum, item) => sum + item.ostatok, 0) // 18 450 000 000
 
   return (
-    <div className="w-full px-3 mt-6">
-      <div className="h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
+    <div className="w-full h-full">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
         {/* Header Title */}
         <div className="mb-6 pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
@@ -54,15 +54,15 @@ export function OstatkiTovara() {
         {/* Content Layout */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 min-h-40">
           {/* Left Side: Recharts Doughnut Chart */}
-          <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
+          <div className="relative w-30 h-30 flex items-center justify-center shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={73}
+                  innerRadius={45}
+                  outerRadius={60}
                   paddingAngle={0}
                   dataKey="ostatok"
                   startAngle={90}
@@ -90,10 +90,10 @@ export function OstatkiTovara() {
                       maximumFractionDigits: 2,
                     })}
                   </span>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">
+                  <span className="text-[8px] text-zinc-400 font-bold uppercase mt-1 leading-none">
                     млрд сум
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-semibold mt-1 max-w-21.25 truncate">
+                  <span className="text-[8px] text-zinc-500 font-semibold mt-1 max-w-21.25 truncate">
                     {data[0].filial}
                   </span>
                 </>
@@ -105,10 +105,10 @@ export function OstatkiTovara() {
                       maximumFractionDigits: 2,
                     })}
                   </span>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">
+                  <span className="text-[8px] text-zinc-400 font-bold uppercase mt-1 leading-none">
                     млрд сум
                   </span>
-                  <span className="text-[9px] text-zinc-500 font-semibold mt-1">
+                  <span className="text-[8px] text-zinc-500 font-semibold mt-1">
                     общий остаток
                   </span>
                 </>
@@ -133,14 +133,14 @@ export function OstatkiTovara() {
                 >
                   <div className="col-span-5 flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${item.bgKlass}`} />
-                    <span className="text-zinc-200 font-medium text-xs">
+                    <span className="text-zinc-200 font-medium text-[8px]">
                       {item.filial}
                     </span>
                   </div>
-                  <div className="col-span-5 text-right text-zinc-300 font-medium text-xs">
+                  <div className="col-span-5 text-right text-zinc-300 font-medium text-[8px]">
                     {formatSuma(item.ostatok)}
                   </div>
-                  <div className="col-span-2 text-right text-zinc-400 font-semibold text-xs">
+                  <div className="col-span-2 text-right text-zinc-400 font-semibold text-[8px]">
                     {item.foiz}%
                   </div>
                 </div>
@@ -148,13 +148,13 @@ export function OstatkiTovara() {
 
               {/* Total Row */}
               <div className="grid grid-cols-12 gap-2 py-3 mt-1.5 border-t border-zinc-800/40 items-center">
-                <div className="col-span-5 text-zinc-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">
+                <div className="col-span-5 text-zinc-400 font-semibold text-[10px] uppercase tracking-wide">
                   Итого
                 </div>
-                <div className="col-span-5 text-right text-zinc-100 font-bold text-xs">
+                <div className="col-span-5 text-right text-zinc-100 font-bold text-[9px]">
                   {formatSuma(totalOstatok)}
                 </div>
-                <div className="col-span-2 text-right text-zinc-400 font-bold text-xs">
+                <div className="col-span-2 text-right text-zinc-400 font-bold text-[10px]">
                   100%
                 </div>
               </div>
