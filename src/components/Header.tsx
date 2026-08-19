@@ -18,24 +18,28 @@ import {
 export interface HeaderProps {
   title?: string
   subTitle?: string
+  date?: DateRange
   onDateChange?: (date: DateRange | undefined) => void
   onBranchChange?: (branch: string) => void
 }
 
 export function Header({
   title = "КАБИНЕТ РУКОВОДИТЕЛЯ",
+  date: externalDate,
   onDateChange,
   onBranchChange,
 }: HeaderProps) {
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(2024, 5, 1), // June 1, 2024
-    to: new Date(2024, 5, 30), // June 30, 2024
+  const [internalDate, setInternalDate] = useState<DateRange | undefined>({
+    from: new Date(2026, 0, 1),
+    to: new Date(2026, 11, 4),
   })
-  const [month, setMonth] = useState<Date | undefined>(new Date(2024, 5, 1))
+  const date = externalDate !== undefined ? externalDate : internalDate
+
+  const [month, setMonth] = useState<Date | undefined>(date?.from || new Date(2026, 0, 1))
   const [branch, setBranch] = useState("all")
 
   const handleDateChange = (newDate: DateRange | undefined) => {
-    setDate(newDate)
+    setInternalDate(newDate)
     if (newDate?.from) {
       setMonth(newDate.from)
     }
@@ -110,17 +114,14 @@ export function Header({
               <SelectItem value="all" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
                 Все филиалы
               </SelectItem>
+              <SelectItem value="guliston" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
+                Гулистан
+              </SelectItem>
               <SelectItem value="tashkent" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
                 Ташкент
               </SelectItem>
-              <SelectItem value="samarkand" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
-                Самарканд
-              </SelectItem>
-              <SelectItem value="bukhara" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
-                Бухара
-              </SelectItem>
-              <SelectItem value="fergana" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
-                Фергана
+              <SelectItem value="jizzax" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
+                Джизак
               </SelectItem>
             </SelectContent>
           </Select>

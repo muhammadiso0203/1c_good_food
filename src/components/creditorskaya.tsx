@@ -1,6 +1,6 @@
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 
-interface DebitorItem {
+interface CreditorItem {
   period: string
   summa: number
   foiz: number
@@ -8,7 +8,7 @@ interface DebitorItem {
   bgKlass: string
 }
 
-const data: DebitorItem[] = [
+const data: CreditorItem[] = [
   {
     period: "До 30 дней",
     summa: 1245600000,
@@ -39,7 +39,7 @@ const data: DebitorItem[] = [
   },
 ]
 
-export function DebitorskayaZadoljennost() {
+export function CreditorskayaZadoljennost() {
   const formatSuma = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }
@@ -56,7 +56,7 @@ export function DebitorskayaZadoljennost() {
         {/* Header Title */}
         <div className="mb-4 pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
-            ДЕБИТОРСКАЯ ЗАДОЛЖЕННОСТЬ
+            КРЕДИТОРСКАЯ ЗАДОЛЖЕННОСТЬ
           </h2>
         </div>
 
@@ -117,7 +117,7 @@ export function DebitorskayaZadoljennost() {
               <div key={idx} className="flex items-start gap-2.5">
                 {/* Color Box */}
                 <span
-                  className={`w-3 h-3 rounded-[2px] shrink-0 mt-0.5 ${item.bgKlass}`}
+                  className={`w-3 h-3 rounded-xs shrink-0 mt-0.5 ${item.bgKlass}`}
                 />
 
                 {/* Info */}

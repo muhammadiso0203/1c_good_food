@@ -9,21 +9,21 @@ export interface FilialSavdo {
 
 const defaultData: FilialSavdo[] = [
   {
-    nomi: "Ташкент",
+    nomi: "Гулистан",
     bugun: 625450000,
     oy: 12450800000,
     reja: 14500000000,
     bajarilish: 86,
   },
   {
-    nomi: "Самарканд",
+    nomi: "Ташкент",
     bugun: 298120000,
     oy: 6102400000,
     reja: 7500000000,
     bajarilish: 81,
   },
   {
-    nomi: "Фергана",
+    nomi: "Джизак",
     bugun: 187330000,
     oy: 4221600000,
     reja: 5000000000,

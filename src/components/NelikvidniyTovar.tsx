@@ -56,7 +56,7 @@ export function NelikvidniyTovar() {
     <div className="w-full h-full">
       <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none h-full flex flex-col justify-between">
         {/* Header Title */}
-        <div className="mb-4 pb-3 border-b border-zinc-800/40">
+        <div className="border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             НЕЛИКВИДНЫЙ ТОВАР (БОЛЕЕ 90 ДНЕЙ БЕЗ ДВИЖЕНИЯ)
           </h2>
@@ -67,32 +67,32 @@ export function NelikvidniyTovar() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-zinc-800/30 text-[10px] uppercase tracking-wider text-zinc-500">
-                <th className="px-2 text-left">ТОВАР</th>
-                <th className="px-2 text-left">ФИЛИАЛ</th>
-                <th className="px-2 text-right">ОСТАТОК</th>
-                <th className="px-2 text-right">СУММА, СУМ</th>
-                <th className="px-2 text-right">БЕЗ ДВИЖЕНИЯ</th>
+                <th className="px-1 text-left">ТОВАР</th>
+                <th className="px-1 text-left">ФИЛИАЛ</th>
+                <th className="px-1 text-right">ОСТАТОК</th>
+                <th className="px-1 text-right">СУММА, СУМ</th>
+                <th className="px-1 text-right">БЕЗ ДВИЖЕНИЯ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/10 text-xs">
+            <tbody className="divide-y divide-zinc-800/10 text-[9px]">
               {defaultData.map((item, idx) => (
                 <tr
                   key={idx}
                   className="hover:bg-zinc-800/20 transition-colors duration-200"
                 >
-                  <td className="py-2 px-1 text-zinc-200">
+                  <td className=" px-1 text-zinc-200">
                     {item.tovar}
                   </td>
-                  <td className="py-2 px-1 text-zinc-400">
+                  <td className=" px-1 text-zinc-400">
                     {item.filial}
                   </td>
-                  <td className="py-2 px-1 text-right text-zinc-300">
+                  <td className=" px-1 text-right text-zinc-300">
                     {item.ostatok}
                   </td>
-                  <td className="py-2 px-1 text-right text-zinc-200">
+                  <td className=" px-1 text-right text-zinc-200">
                     {formatSuma(item.summa)}
                   </td>
-                  <td className="py-2 px-1 text-right text-red-500">
+                  <td className=" px-1 text-right text-red-500">
                     {item.bezDvijeniya}
                   </td>
                 </tr>
@@ -102,7 +102,7 @@ export function NelikvidniyTovar() {
         </div>
 
         {/* Total Row */}
-        <div className="pt-4 mt-2 border-t border-zinc-800/40 flex items-center justify-between">
+        <div className="border-t border-zinc-800/40 flex items-center justify-between">
           <span className="text-amber-500 text-xs uppercase tracking-wider">
             ИТОГО
           </span>

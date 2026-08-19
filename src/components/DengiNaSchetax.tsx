@@ -34,16 +34,16 @@ export function DengiNaSchetax() {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
+      <div className="h-full flex flex-col justify-center bg-gray-800/40 border border-zinc-800/60 rounded-xl p-2 select-none">
         {/* Header Title */}
-        <div className="mb-5 pb-3 border-b border-zinc-800/40">
+        <div className="pb-5 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ДЕНЬГИ НА СЧЕТАХ И В КАССАХ
           </h2>
         </div>
 
         {/* Content Columns Grid */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1">
           {/* Left Column: НА РАСЧЕТНЫХ СЧЕТАХ */}
           <div className="flex flex-col bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-4">
             {/* Sub Header */}
@@ -67,23 +67,23 @@ export function DengiNaSchetax() {
               {data.map((item, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-12 gap-2 py-2.5 items-center px-1.5 -mx-1.5 hover:bg-zinc-800/10 rounded-lg transition-colors"
+                  className="grid grid-cols-12 gap-2 items-center px-1 -mx-1 hover:bg-zinc-800/10 rounded-lg transition-colors"
                 >
-                  <div className="col-span-5 text-zinc-200 text-sm">
+                  <div className="col-span-5 text-zinc-200 text-[13px]">
                     {item.filial}
                   </div>
-                  <div className="col-span-7 text-right text-zinc-300 text-sm">
+                  <div className="col-span-7 text-right text-zinc-300 text-[12px]">
                     {formatSuma(item.schet)}
                   </div>
                 </div>
               ))}
 
               {/* Total Row */}
-              <div className="grid grid-cols-12 gap-2 py-3 mt-1 border-t border-zinc-800/40 items-center">
+              <div className="grid grid-cols-12 gap-2 mt-1 border-t border-zinc-800/40 items-center">
                 <div className="col-span-5 text-zinc-400 text-sm uppercase tracking-wide">
                   Итого
                 </div>
-                <div className="col-span-7 text-right text-emerald-400 text-sm">
+                <div className="col-span-7 text-right text-emerald-400 text-[12px]">
                   {formatSuma(totalSchet)}
                 </div>
               </div>
@@ -113,23 +113,23 @@ export function DengiNaSchetax() {
               {data.map((item, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-12 gap-2 py-2.5 items-center px-1.5 -mx-1.5 hover:bg-zinc-800/10 rounded-lg transition-colors"
+                  className="grid grid-cols-12 gap-2 items-center px-1.5 -mx-1.5 hover:bg-zinc-800/10 rounded-lg transition-colors"
                 >
-                  <div className="col-span-5 text-zinc-200 text-sm">
+                  <div className="col-span-5 text-zinc-200 text-[13px]">
                     {item.filial}
                   </div>
-                  <div className="col-span-7 text-right text-zinc-300 text-sm">
+                  <div className="col-span-7 text-right text-zinc-300 text-[12px]">
                     {formatSuma(item.kassa)}
                   </div>
                 </div>
               ))}
 
               {/* Total Row */}
-              <div className="grid grid-cols-12 gap-2 py-3 mt-1 border-t border-zinc-800/40 items-center">
+              <div className="grid grid-cols-12 gap-2  mt-1 border-t border-zinc-800/40 items-center">
                 <div className="col-span-5 text-zinc-400 text-sm uppercase tracking-wide">
                   Итого
                 </div>
-                <div className="col-span-7 text-right text-purple-400 text-sm">
+                <div className="col-span-7 text-right text-purple-400 text-[13px]">
                   {formatSuma(totalKassa)}
                 </div>
               </div>
