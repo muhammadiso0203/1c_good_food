@@ -60,7 +60,7 @@ export function TrebuyetVnimaniya() {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none h-full flex flex-col justify-between">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none h-full flex flex-col">
         {/* Header Title */}
         <div className="mb-3 pb-3 border-b border-zinc-800/40 flex items-center gap-2.5">
           <Bell className="w-4 h-4 text-indigo-400 shrink-0" />

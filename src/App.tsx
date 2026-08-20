@@ -51,7 +51,7 @@ const App = () => {
 
         {/* Bottom Row */}
         <div className="grid grid-cols-4 gap-4 mt-4">
-          <DengiNaSchetax />
+          <DengiNaSchetax date={date} />
           <NelikvidniyTovar />
           <DebitorskayaZadoljennost />
           <CreditorskayaZadoljennost />

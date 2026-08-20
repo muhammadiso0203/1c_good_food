@@ -30,12 +30,12 @@ export function Header({
   onBranchChange,
 }: HeaderProps) {
   const [internalDate, setInternalDate] = useState<DateRange | undefined>({
-    from: new Date(2026, 0, 1),
-    to: new Date(2026, 11, 4),
+    from: new Date(),
+    to: new Date(),
   })
   const date = externalDate !== undefined ? externalDate : internalDate
 
-  const [month, setMonth] = useState<Date | undefined>(date?.from || new Date(2026, 0, 1))
+  const [month, setMonth] = useState<Date | undefined>(date?.from || new Date())
   const [branch, setBranch] = useState("all")
 
   const handleDateChange = (newDate: DateRange | undefined) => {

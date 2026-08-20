@@ -17,7 +17,7 @@ interface OstatkiTovaraProps {
 }
 
 const DEFAULT_BRANCHES = [
-  { key: "ОстаткиТовара_Гулистан", filial: "Гулистан", defaultVal: 7608731562.59, color: "#3b82f6", bgKlass: "bg-blue-500" },
+  { key: "ОстаткиТовара_Сурдарьинская", filial: "Сырдарья", defaultVal: 7608731562.59, color: "#3b82f6", bgKlass: "bg-blue-500" },
   { key: "ОстаткиТовара_Ташкент", filial: "Ташкент", defaultVal: 660373429.79, color: "#10b981", bgKlass: "bg-emerald-500" },
   { key: "ОстаткиТовара_Жиззах", filial: "Джизак", defaultVal: 357826997.38, color: "#f59e0b", bgKlass: "bg-amber-500" },
 ]
