@@ -161,9 +161,9 @@ export function StatsCards({ date }: { date?: DateRange }) {
     },
     {
       title: "НЕЛИКВИДНЫЙ ТОВАР",
-      value: formatNumber(1245600000),
+      value: formatNumber(data?.НеликвидныйТовар_30дней),
       unit: "тыс. сум",
-      trend: { value: "-2.1%", label: "за период", isPositive: false, isUp: false },
+      trend: formatTrend(data?.НеликвидныйТоварИзменение_30дней, "за период"),
       icon: PackageMinus,
       iconColor: "bg-orange-950/40 text-orange-400 border border-orange-500/20",
     },

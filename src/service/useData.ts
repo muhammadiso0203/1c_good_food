@@ -1,5 +1,5 @@
 import { api } from "../config/config"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { format } from "date-fns"
 import type { DateRange } from "react-day-picker"
 import type { StatsCard } from "./interface"
@@ -16,5 +16,10 @@ export const useData = (dateRange?: DateRange) => {
                 data_kon
             }).then((res) => res.data)
         },
+        staleTime: 1000 * 60 * 60 * 24, // 24 soat keshda saqlanadi
+        gcTime: 1000 * 60 * 60 * 24,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        placeholderData: keepPreviousData,
     })
 }
