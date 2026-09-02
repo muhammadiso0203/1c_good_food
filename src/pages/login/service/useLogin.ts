@@ -18,11 +18,15 @@ export const useLogin = () => {
     mutationFn: async ({ username, password }) => {
       // console.log(api.defaults.baseURL);
       const token = btoa(`${username}:${password}`);
-      const response = await api.post<UserResponse>("/dashboard/user", {
-        headers: {
-          Authorization: `Basic ${token}`,
-        },
-      });
+      const response = await api.post<UserResponse>(
+        "/dashboard/user",
+        {},
+        {
+          headers: {
+            Authorization: `Basic ${token}`,
+          },
+        }
+      );
       return response.data;
     },
   });

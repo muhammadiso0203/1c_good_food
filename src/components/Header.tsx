@@ -43,6 +43,7 @@ export function Header({
   const [month, setMonth] = useState<Date | undefined>(date?.from || new Date())
   const [internalBranch, setInternalBranch] = useState<number>(1)
   const branch = externalBranch !== undefined ? externalBranch : internalBranch
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleDateChange = (newDate: DateRange | undefined) => {
     setInternalDate(newDate)
@@ -51,6 +52,10 @@ export function Header({
     }
     if (onDateChange) {
       onDateChange(newDate)
+    }
+    // Agar boshlanish va tugash sanasi tanlansa, kalendar avtomatik yopiladi
+    if (newDate?.from && newDate?.to) {
+      setIsOpen(false)
     }
   }
 
@@ -96,7 +101,7 @@ export function Header({
             <span className="text-[11px] font-semibold text-zinc-500">
               Период
             </span>
-            <Popover>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
