@@ -12,7 +12,7 @@ import {
   type LucideIcon
 } from "lucide-react"
 import { cn } from "../lib/utils"
-import { useData } from "../service/useData"
+import { useData } from "../pages/service/useData"
 import type { DateRange } from "react-day-picker"
 
 
@@ -54,10 +54,10 @@ const formatTrend = (val?: number, label = "за период", invertPositive =
 
 const SkeletonCard = () => {
   return (
-    <div className="flex flex-col justify-between p-4 bg-gray-800 border border-zinc-800/40 rounded-xl animate-pulse">
+    <div className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 rounded-xl animate-pulse min-h-[130px]">
       {/* Header */}
-      <div className="flex items-start gap-2.5 mb-4">
-        <div className="w-7 h-7 rounded-full bg-zinc-700/60 shrink-0" />
+      <div className="flex items-start gap-2 mb-3">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-700/60 shrink-0" />
 
         <div className="flex flex-col gap-1.5 pt-1 w-full">
           <div className="h-2 w-3/4 bg-zinc-700/60 rounded" />
@@ -66,13 +66,13 @@ const SkeletonCard = () => {
       </div>
 
       {/* Value */}
-      <div className="flex flex-col gap-2 mb-3">
+      <div className="flex flex-col gap-2 mb-2">
         <div className="h-4 w-4/5 bg-zinc-700/60 rounded" />
         <div className="h-2 w-1/3 bg-zinc-700/40 rounded" />
       </div>
 
       {/* Trend */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 mt-auto">
         <div className="h-2 w-5 bg-zinc-700/60 rounded" />
         <div className="h-2 w-8 bg-zinc-700/60 rounded" />
         <div className="h-2 w-14 bg-zinc-700/40 rounded" />
@@ -81,10 +81,9 @@ const SkeletonCard = () => {
   )
 }
 
-export function StatsCards({ date }: { date?: DateRange }) {
-  const { data, isLoading } = useData(date)
+export function StatsCards({ date, branch }: { date?: DateRange; branch?: number }) {
+  const { data, isLoading } = useData(date, branch)
 
- 
 
   const defaultStats: StatCardProps[] = [
     {
@@ -153,9 +152,9 @@ export function StatsCards({ date }: { date?: DateRange }) {
     },
     {
       title: "ПРОСРОЧЕННАЯ ДЕБИТОРКА",
-      value: formatNumber(540350000),
+      value: formatNumber(data?.ПросроченнаяДебиторка),
       unit: "тыс. сум",
-      trend: { value: "7.5%", label: "за период", isPositive: true, isUp: true },
+      trend: formatTrend(data?.ПросроченнаяДебиторкаИзменение, "за период"),
       icon: Clock,
       iconColor: "bg-rose-950/40 text-rose-400 border border-rose-500/20",
     },
@@ -170,31 +169,31 @@ export function StatsCards({ date }: { date?: DateRange }) {
   ]
 
   return (
-    <div className="w-full grid grid-cols-10 gap-3 px-3 mt-6">
-      {isLoading ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />) : defaultStats.map((stat, idx) => {
+    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-10 gap-3 mt-6">
+      {isLoading && !data ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />) : defaultStats.map((stat, idx) => {
         const IconComponent = stat.icon
         return (
           <div
             key={idx}
-            className="flex flex-col justify-between p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300"
+            className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-[130px]"
           >
             {/* Header: Icon + Title */}
-            <div className="flex items-start gap-2.5 mb-4">
+            <div className="flex items-start gap-2 sm:gap-2.5 mb-3">
               <div className={cn("p-1.5 rounded-full shrink-0 flex items-center justify-center", stat.iconColor)}>
-                <IconComponent className="h-4 w-4" />
+                <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <h3 className="text-[9px] font-bold tracking-wide text-zinc-400 leading-tight">
+              <h3 className="text-[8px] sm:text-[8px] xl:text-[8px] font-bold tracking-wide text-zinc-400 leading-tight">
                 {stat.title}
               </h3>
             </div>
 
             {/* Content: Value + Unit / Progress */}
-            <div className="flex flex-col gap-1 mb-3">
+            <div className="flex flex-col gap-1 mb-2">
               <div className="text-sm xl:text-[15px] font-extrabold text-zinc-100 tracking-tight leading-none">
                 {stat.value}
               </div>
               {stat.progress !== undefined ? (
-                <div className="w-full bg-zinc-800 h-2.5 rounded-full mt-1.5 overflow-hidden">
+                <div className="w-full bg-zinc-800 h-2 sm:h-2.5 rounded-full mt-1.5 overflow-hidden">
                   <div
                     className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                     style={{ width: `${stat.progress}%` }}
@@ -210,7 +209,7 @@ export function StatsCards({ date }: { date?: DateRange }) {
             {/* Footer: Trend */}
             <div
               className={cn(
-                "flex items-center gap-1 text-[10px] font-bold mt-auto shrink-0",
+                "flex items-center gap-1 text-[10px] font-bold mt-auto shrink-0 flex-wrap",
                 stat.trend.isPositive ? "text-emerald-500" : "text-rose-500"
               )}
             >

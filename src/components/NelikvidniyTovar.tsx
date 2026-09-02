@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { useData } from "../service/useData"
+import { useData } from "../pages/service/useData"
 import type { DateRange } from "react-day-picker"
 import { Loader2, Search } from "lucide-react"
 
@@ -96,10 +96,12 @@ function getSeverity(days: number) {
 
 interface NelikvidniyTovarProps {
   date?: DateRange
+  branch?: number
 }
 
-export function NelikvidniyTovar({ date }: NelikvidniyTovarProps) {
-  const { data, isLoading, isFetching } = useData(date)
+export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
+  const { data, isLoading, isFetching } = useData(date, branch)
+
   const [searchTerm, setSearchTerm] = useState("")
 
   const allItems = useMemo(() => parseNelikvidData(data), [data])
@@ -126,9 +128,8 @@ export function NelikvidniyTovar({ date }: NelikvidniyTovarProps) {
 
   return (
     <div className="w-full flex flex-col gap-5">
-
       {/* Asosiy jadval bloki */}
-      <div className="relative p-5 select-none flex flex-col min-h-120">
+      <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col min-h-120 mt-4">
         {/* Loading holati */}
         {(isLoading || isFetching) && (
           <div className="absolute inset-0 z-30 bg-gray-900/70 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
@@ -138,32 +139,32 @@ export function NelikvidniyTovar({ date }: NelikvidniyTovarProps) {
         )}
 
         {/* Sarlavha va filtrlar qatori */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 mb-4 border-b border-zinc-800/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 sm:pb-4 sm:mb-4 border-b border-zinc-800/40">
           <div>
-            <h2 className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
+            <h2 className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
               НЕЛИКВИДНЫЙ ТОВАР (БОЛЕЕ 90 ДНЕЙ БЕЗ ДВИЖЕНИЯ)
             </h2>
           </div>
 
           {/* Qidiruv va filial filtri */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* Qidiruv input */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Поиск товара или филиала..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-56 sm:w-64 h-8 pl-8 pr-3 bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 rounded-lg focus:outline-none focus:border-zinc-700 transition-colors"
+                className="w-full sm:w-64 h-8 pl-8 pr-3 bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 rounded-lg focus:outline-none focus:border-zinc-700 transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Jadval */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+        <div className="overflow-x-auto -mx-1 sm:mx-0">
+          <table className="w-full min-w-[580px] border-collapse text-left">
             <thead>
               <tr className="border-b border-zinc-800/40 text-[10px] uppercase tracking-wider text-zinc-500">
                 <th className="py-2.5 px-3 text-center w-12 font-medium">№</th>

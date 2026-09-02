@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import type { DateRange } from "react-day-picker"
-import { useData } from "../service/useData"
+import { useData } from "../pages/service/useData"
 import { Loader2 } from "lucide-react"
 
 interface OstatokItem {
@@ -14,6 +14,7 @@ interface OstatokItem {
 
 interface OstatkiTovaraProps {
   date?: DateRange
+  branch?: number
 }
 
 const DEFAULT_BRANCHES = [
@@ -22,15 +23,29 @@ const DEFAULT_BRANCHES = [
   { key: "ОстаткиТовара_Жиззах", filial: "Джизак", defaultVal: 357826997.38, color: "#f59e0b", bgKlass: "bg-amber-500" },
 ]
 
-export function OstatkiTovara({ date }: OstatkiTovaraProps) {
-  const { data: apiData, isLoading, isFetching } = useData(date)
+export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
+  const { data: apiData, isLoading } = useData(date, branch)
+
 
   const data: OstatokItem[] = useMemo(() => {
     let rawItems = DEFAULT_BRANCHES.map((b) => {
-      let val = b.defaultVal
-      if (apiData && apiData[b.key] !== undefined && typeof apiData[b.key] === "number") {
-        val = apiData[b.key]
+      let val = 0
+      if (apiData) {
+        for (const k in apiData) {
+          const kLower = k.toLowerCase()
+          if (
+            k === b.key ||
+            (kLower.includes("остаткитовара") && kLower.includes(b.filial.toLowerCase())) ||
+            (kLower.includes("остаток") && kLower.includes(b.filial.toLowerCase()))
+          ) {
+            const raw = apiData[k]
+            val = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
+          }
+        }
+      } else {
+        val = b.defaultVal
       }
+
       return {
         filial: b.filial,
         ostatok: Math.round(val),
@@ -59,9 +74,9 @@ export function OstatkiTovara({ date }: OstatkiTovaraProps) {
 
   return (
     <div className="w-full h-full">
-      <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
+      <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full flex flex-col justify-between">
         {/* Loading Overlay */}
-        {(isLoading || isFetching) && (
+        {isLoading && !apiData && (
           <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2 transition-all duration-200">
             <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
             <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
@@ -69,16 +84,16 @@ export function OstatkiTovara({ date }: OstatkiTovaraProps) {
         )}
 
         {/* Header Title */}
-        <div className="mb-6 pb-3 border-b border-zinc-800/40">
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ОСТАТКИ ТОВАРА
           </h2>
         </div>
 
         {/* Content Layout */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 min-h-40">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 min-h-40 flex-1">
           {/* Left Side: Recharts Doughnut Chart */}
-          <div className="relative w-30 h-30 flex items-center justify-center shrink-0">
+          <div className="relative w-28 h-28 sm:w-30 sm:h-30 flex items-center justify-center shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

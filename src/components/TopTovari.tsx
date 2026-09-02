@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts"
 import type { DateRange } from "react-day-picker"
-import { useData } from "../service/useData"
+import { useData } from "../pages/service/useData"
 import { Loader2 } from "lucide-react"
 
 interface ProductSaleItem {
@@ -11,26 +11,16 @@ interface ProductSaleItem {
 
 interface TopTovariProps {
   date?: DateRange
+  branch?: number
 }
 
-const DEFAULT_TOP_PRODUCTS: ProductSaleItem[] = [
-  { name: "UzRice Рис Лазер в.сорт 25кг", value: 3915249554.5 },
-  { name: "MacCoffee 3in1 20g (100s)", value: 3207633600 },
-  { name: "Уникон 82 20кг монолит", value: 2602351000 },
-  { name: "UzRice Рис Аланга в.сорт 25кг", value: 2028504895.5 },
-  { name: "Для слоеной выпечки 80% 10кг", value: 1874201000 },
-  { name: "Рис Лазер в.сорт 950гр", value: 1493422080 },
-  { name: "Майонез Провансаль с лим.соком", value: 1464319211 },
-  { name: "Jolly Bee Персик-малина 500гр", value: 1372829305.26 },
-  { name: "Рис Аланга в.сорт 950гр", value: 1226749376.6 },
-  { name: "Майонез С перепел. яйцом 800г", value: 998537237 },
-]
+export function TopTovari({ date, branch }: TopTovariProps) {
 
-export function TopTovari({ date }: TopTovariProps) {
-  const { data: apiData, isLoading, isFetching } = useData(date)
+  const { data: apiData, isLoading } = useData(date, branch)
+
 
   const data: ProductSaleItem[] = useMemo(() => {
-    if (!apiData) return DEFAULT_TOP_PRODUCTS
+    if (!apiData) return []
 
     const extracted: { rank: number; name: string; value: number }[] = []
 
@@ -47,16 +37,16 @@ export function TopTovari({ date }: TopTovariProps) {
           .replace(/_/g, " ")
           .replace(/\s+/g, " ")
           .trim()
-        const value = typeof apiData[key] === "number" ? apiData[key] : 0
+        const rawVal = apiData[key]
+        const value = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
         extracted.push({ rank, name, value })
       }
     }
 
-    if (extracted.length === 0) return DEFAULT_TOP_PRODUCTS
-
     extracted.sort((a, b) => a.rank - b.rank)
     return extracted.map((item) => ({ name: item.name, value: item.value }))
   }, [apiData])
+
 
   const formatSuma = (val: number) => {
     return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
@@ -69,9 +59,9 @@ export function TopTovari({ date }: TopTovariProps) {
 
   return (
     <div className="w-full h-full">
-      <div className="relative h-66 bg-gray-800/40 border border-zinc-800/60 rounded-xl p-4 select-none flex flex-col">
+      <div className="relative min-h-[260px] h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-4 select-none flex flex-col justify-between">
         {/* Loading Overlay */}
-        {(isLoading || isFetching) && (
+        {isLoading && !apiData && (
           <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2 transition-all duration-200">
             <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
             <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>

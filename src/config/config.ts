@@ -8,3 +8,5 @@ export const api = axios.create({
         password: '123'
     }
 })
+
+export default api;

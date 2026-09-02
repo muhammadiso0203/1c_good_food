@@ -59,17 +59,17 @@ export function FiliallarSavdosi() {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5">
         {/* Sarlavha qismi */}
-        <div className="mb-5 pb-3 border-b border-zinc-800/40">
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ПРОДАЖИ ПО ФИЛИАЛАМ
           </h2>
         </div>
 
         {/* Jadval qismi */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+        <div className="overflow-x-auto -mx-1 sm:mx-0">
+          <table className="w-full min-w-[440px] border-collapse text-left">
             <thead>
               <tr className="border-b border-zinc-800/30 text-[10px] uppercase tracking-wider text-zinc-500">
                 <th className="py-3 px-2">ФИЛИАЛ</th>

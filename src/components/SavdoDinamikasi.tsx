@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react"
 import type { DateRange } from "react-day-picker"
-import { useData } from "../service/useData"
+import { useData } from "../pages/service/useData"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 interface ChartDataPoint {
@@ -24,13 +24,14 @@ const MONTHS = [
   { name: "Дек", full: "Декабрь", defCurr: undefined, defPrev: 0 },
 ]
 
-export function SavdoDinamikasi({ date }: { date?: DateRange }) {
+export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 600, height: 175 })
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
-  const { data: apiData, isLoading, isFetching } = useData(date)
+  const { data: apiData, isLoading } = useData(date, branch)
+
 
   const data: ChartDataPoint[] = useMemo(() => {
     return MONTHS.map((m, i) => {
@@ -40,20 +41,29 @@ export function SavdoDinamikasi({ date }: { date?: DateRange }) {
 
       if (apiData) {
         for (const k in apiData) {
-          if (k.startsWith(`ДинамикаПродаж_${idx}_`)) currRaw = apiData[k]
-          else if (k.startsWith(`ДинамикаПродажПредыдущий_${idx}_`) || k.startsWith(`ДинамикаПродажПредудущий_${idx}_`)) {
-            prevRaw = apiData[k]
+          if (k.startsWith(`ДинамикаПродаж_${idx}_`)) {
+            const raw = apiData[k]
+            currRaw = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
+          } else if (
+            k.startsWith(`ДинамикаПродажПредыдущий_${idx}_`) ||
+            k.startsWith(`ДинамикаПродажПредудущий_${idx}_`)
+          ) {
+            const raw = apiData[k]
+            prevRaw = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
           }
         }
       }
 
-      const parseVal = (val: number | undefined, def: number | undefined) =>
-        val !== undefined ? (val > 0 ? Number((val > 100 ? val / 1000 : val).toFixed(2)) : undefined) : def
+      const parseVal = (val: number | undefined) => {
+        if (!apiData) return undefined
+        if (val === undefined) return 0
+        return val > 0 ? Number((val > 100 ? val / 1000 : val).toFixed(2)) : 0
+      }
 
       return {
         month: m.name,
-        currentYear: parseVal(currRaw, m.defCurr),
-        prevYear: parseVal(prevRaw, m.defPrev) ?? m.defPrev,
+        currentYear: apiData ? parseVal(currRaw) : m.defCurr,
+        prevYear: apiData ? (parseVal(prevRaw) ?? 0) : m.defPrev,
       }
     })
   }, [apiData])
@@ -61,13 +71,13 @@ export function SavdoDinamikasi({ date }: { date?: DateRange }) {
   useEffect(() => {
     if (!containerRef.current) return
     const observer = new ResizeObserver(([entry]) => {
-      setDimensions({ width: Math.max(entry.contentRect.width, 300), height: 175 })
+      setDimensions({ width: Math.max(entry.contentRect.width, 280), height: 175 })
     })
     observer.observe(containerRef.current)
     return () => observer.disconnect()
   }, [])
 
-  const paddingLeft = 40, paddingRight = 65, paddingTop = 20, paddingBottom = 25
+  const paddingLeft = 35, paddingRight = dimensions.width < 400 ? 30 : 65, paddingTop = 20, paddingBottom = 25
   const chartWidth = dimensions.width - paddingLeft - paddingRight
   const chartHeight = dimensions.height - paddingTop - paddingBottom
 
@@ -121,30 +131,30 @@ export function SavdoDinamikasi({ date }: { date?: DateRange }) {
 
   return (
     <div className="w-full h-full">
-      <div ref={containerRef} className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none h-full">
-        {(isLoading || isFetching) && (
+      <div ref={containerRef} className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full overflow-hidden">
+        {isLoading && !apiData && (
           <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
             <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
             <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
           </div>
         )}
 
-        <div className="flex flex-col gap-3 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ДИНАМИКА ПРОДАЖ (МЕСЯЦЫ)
           </h2>
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="w-4 h-2 bg-blue-500 block" />
-              <span className="text-zinc-300 font-medium">Текущий год</span>
+              <span className="w-3.5 sm:w-4 h-2 bg-blue-500 block rounded-xs" />
+              <span className="text-zinc-300 font-medium text-[11px] sm:text-xs">Текущий год</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="flex gap-0.5 items-center">
-                <span className="w-1 h-0.5 bg-zinc-500 rounded-sm" />
-                <span className="w-1 h-0.5 bg-zinc-500 rounded-sm" />
-                <span className="w-1 h-0.5 bg-zinc-500 rounded-sm" />
+                <span className="w-1 h-0.5 bg-zinc-500 rounded-xs" />
+                <span className="w-1 h-0.5 bg-zinc-500 rounded-xs" />
+                <span className="w-1 h-0.5 bg-zinc-500 rounded-xs" />
               </span>
-              <span className="text-zinc-400 font-medium">Прошлый год</span>
+              <span className="text-zinc-400 font-medium text-[11px] sm:text-xs">Прошлый год</span>
             </div>
           </div>
         </div>

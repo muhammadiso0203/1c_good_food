@@ -1,6 +1,6 @@
 import { Landmark, Coins, Loader2 } from "lucide-react"
 import type { DateRange } from "react-day-picker"
-import { useData } from "../service/useData"
+import { useData } from "../pages/service/useData"
 import { useMemo } from "react"
 
 interface AccountData {
@@ -15,8 +15,9 @@ const REGIONS = [
   { key: "Ташкентская_область", name: "Ташкент" },
 ]
 
-export function DengiNaSchetax({ date }: { date?: DateRange }) {
-  const { data: apiData, isLoading, isFetching } = useData(date)
+export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: number }) {
+  const { data: apiData, isLoading } = useData(date, branch)
+
 
   const data: AccountData[] = useMemo(() => {
     return REGIONS.map((reg) => {
@@ -52,22 +53,22 @@ export function DengiNaSchetax({ date }: { date?: DateRange }) {
 
   return (
     <div className="w-full h-full relative">
-      <div className="h-full flex flex-col justify-between bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3 select-none relative">
-        {(isLoading || isFetching) && (
+      <div className="h-full flex flex-col justify-between bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none relative">
+        {isLoading && !apiData && (
           <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
             <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
             <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
           </div>
         )}
         {/* Header Title */}
-        <div className="pb-3 border-b border-zinc-800/40 mb-2">
-          <h2 className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
+        <div className="pb-2.5 sm:pb-3 border-b border-zinc-800/40 mb-3">
+          <h2 className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ДЕНЬГИ НА СЧЕТАХ И В КАССАХ
           </h2>
         </div>
 
         {/* Content Columns Grid */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 flex-1">
           {/* Left Column: НА РАСЧЕТНЫХ СЧЕТАХ */}
           <div className="flex flex-col bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3">
             {/* Sub Header */}

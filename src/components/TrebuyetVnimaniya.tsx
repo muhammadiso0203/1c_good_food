@@ -60,9 +60,9 @@ export function TrebuyetVnimaniya() {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none h-full flex flex-col">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full flex flex-col">
         {/* Header Title */}
-        <div className="mb-3 pb-3 border-b border-zinc-800/40 flex items-center gap-2.5">
+        <div className="mb-3 pb-2.5 sm:pb-3 border-b border-zinc-800/40 flex items-center gap-2.5">
           <Bell className="w-4 h-4 text-indigo-400 shrink-0" />
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ТРЕБУЕТ ВНИМАНИЯ

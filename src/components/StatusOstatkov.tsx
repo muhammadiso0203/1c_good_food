@@ -47,18 +47,18 @@ export function StatusOstatkov() {
 
   return (
     <div className="w-full h-full">
-      <div className="h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-5 select-none">
+      <div className="h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between">
         {/* Header Title */}
-        <div className="mb-6 pb-3 border-b border-zinc-800/40">
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             СТАТУС ОСТАТКОВ (SKU)
           </h2>
         </div>
 
         {/* Content Layout */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8 min-h-40">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 min-h-40 flex-1">
           {/* Left Side: Recharts Doughnut Chart */}
-          <div className="relative w-30 h-30 flex items-center justify-center shrink-0">
+          <div className="relative w-28 h-28 sm:w-30 sm:h-30 flex items-center justify-center shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
