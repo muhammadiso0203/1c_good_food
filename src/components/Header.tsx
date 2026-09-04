@@ -40,23 +40,41 @@ export function Header({
   })
   const date = externalDate !== undefined ? externalDate : internalDate
 
-  const [month, setMonth] = useState<Date | undefined>(date?.from || new Date())
   const [internalBranch, setInternalBranch] = useState<number>(1)
   const branch = externalBranch !== undefined ? externalBranch : internalBranch
-  const [isOpen, setIsOpen] = useState(false)
 
-  const handleDateChange = (newDate: DateRange | undefined) => {
-    setInternalDate(newDate)
-    if (newDate?.from) {
-      setMonth(newDate.from)
+  const [isOpen, setIsOpen] = useState(false)
+  const [tempDate, setTempDate] = useState<DateRange | undefined>(date)
+  const [month, setMonth] = useState<Date | undefined>(date?.from || new Date())
+
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setTempDate(date)
+      if (date?.from) {
+        setMonth(date.from)
+      }
     }
-    if (onDateChange) {
-      onDateChange(newDate)
+    setIsOpen(open)
+  }
+
+  const handleApply = () => {
+    if (tempDate?.from) {
+      const finalRange: DateRange = {
+        from: tempDate.from,
+        to: tempDate.to || tempDate.from,
+      }
+      setInternalDate(finalRange)
+      if (onDateChange) {
+        onDateChange(finalRange)
+      }
     }
-    // Agar boshlanish va tugash sanasi tanlansa, kalendar avtomatik yopiladi
-    if (newDate?.from && newDate?.to) {
-      setIsOpen(false)
-    }
+    setIsOpen(false)
+  }
+
+  const formatDateRange = (range: DateRange | undefined) => {
+    if (!range?.from) return "Выберите период"
+    if (!range.to) return format(range.from, "dd.MM.yyyy")
+    return `${format(range.from, "dd.MM.yyyy")} - ${format(range.to, "dd.MM.yyyy")}`
   }
 
   const navigate = useNavigate()
@@ -76,14 +94,6 @@ export function Header({
     }
   }
 
-
-  const formatDateRange = (range: DateRange | undefined) => {
-    if (!range) return "Выберите период"
-    if (!range.from) return "Выберите период"
-    if (!range.to) return format(range.from, "dd.MM.yyyy")
-    return `${format(range.from, "dd.MM.yyyy")} - ${format(range.to, "dd.MM.yyyy")}`
-  }
-
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640
 
   return (
@@ -95,13 +105,13 @@ export function Header({
           </h1>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
-          {/* Period (Date Picker) */}
-          <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:min-w-60">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto flex-wrap">
+          {/* Период (Date Picker Popup) */}
+          <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:min-w-64">
             <span className="text-[11px] font-semibold text-zinc-500">
               Период
             </span>
-            <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <Popover open={isOpen} onOpenChange={handleOpenChange}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -109,19 +119,73 @@ export function Header({
                     "w-full justify-between text-left font-normal h-10 px-3 bg-zinc-900/40 border-zinc-800 text-zinc-200 hover:bg-zinc-900/80 hover:text-zinc-100 hover:border-zinc-700 transition-all rounded-md"
                   )}
                 >
-                  <span className="text-xs sm:text-sm font-medium truncate">{formatDateRange(date)}</span>
+                  <span className="text-xs sm:text-sm font-medium truncate">
+                    {formatDateRange(date)}
+                  </span>
                   <CalendarIcon className="h-4 w-4 text-zinc-400 shrink-0 ml-2" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-950 border-zinc-800 text-zinc-200 rounded-lg max-w-[95vw] overflow-x-auto" align="end">
-                <Calendar
-                  mode="range"
-                  month={month}
-                  onMonthChange={setMonth}
-                  selected={date}
-                  onSelect={handleDateChange}
-                  numberOfMonths={isMobile ? 1 : 2}
-                />
+              <PopoverContent
+                className="w-auto p-4 bg-zinc-950 border-zinc-800 text-zinc-200 rounded-xl shadow-2xl max-w-[95vw] overflow-x-auto"
+                align="end"
+              >
+                <div className="flex flex-col gap-4">
+                  {/* Ikkita alohida ko'rinish: Дата начала va Дата окончания */}
+                  <div className="grid grid-cols-2 gap-3 pb-3 border-b border-zinc-800/80">
+                    <div className="flex flex-col gap-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800">
+                      <span className="text-[11px] font-semibold text-zinc-400">
+                        Дата начала:
+                      </span>
+                      <span className="text-sm font-bold text-zinc-100">
+                        {tempDate?.from ? format(tempDate.from, "dd.MM.yyyy") : "—"}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800">
+                      <span className="text-[11px] font-semibold text-zinc-400">
+                        Дата окончания:
+                      </span>
+                      <span className="text-sm font-bold text-zinc-100">
+                        {tempDate?.to
+                          ? format(tempDate.to, "dd.MM.yyyy")
+                          : tempDate?.from
+                          ? format(tempDate.from, "dd.MM.yyyy")
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Kalendar */}
+                  <div className="flex justify-center">
+                    <Calendar
+                      mode="range"
+                      selected={tempDate}
+                      month={month}
+                      onMonthChange={setMonth}
+                      onSelect={(range) => setTempDate(range)}
+                      numberOfMonths={isMobile ? 1 : 2}
+                    />
+                  </div>
+
+                  {/* Tugmalar: Отмена va ОК */}
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800/80">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsOpen(false)}
+                      className="h-8 px-3 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md cursor-pointer"
+                    >
+                      Отмена
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleApply}
+                      className="h-8 px-5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-md shadow-sm transition-all cursor-pointer"
+                    >
+                      ОК
+                    </Button>
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
