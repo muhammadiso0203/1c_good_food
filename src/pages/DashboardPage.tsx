@@ -17,21 +17,21 @@ interface DashboardPageProps {
 
 export function DashboardPage({ date, branch = 1 }: DashboardPageProps) {
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
       <StatsCards date={date} branch={branch} />
 
       {/* Upper Main Dashboard Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 mt-2">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 2xl:gap-5 3xl:gap-6 mt-1 sm:mt-2">
         {/* Left Block (3/4 Width on Desktop) */}
-        <div className="col-span-1 xl:col-span-3 flex flex-col gap-4">
+        <div className="col-span-1 xl:col-span-3 flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
           {/* Top Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 2xl:gap-5 3xl:gap-6">
             <FiliallarSavdosi />
             <SavdoDinamikasi date={date} branch={branch} />
           </div>
 
           {/* Middle Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-5 3xl:gap-6">
             <OstatkiTovara date={date} branch={branch} />
             <TopTovari date={date} branch={branch} />
             <StatusOstatkov />
@@ -39,13 +39,13 @@ export function DashboardPage({ date, branch = 1 }: DashboardPageProps) {
         </div>
 
         {/* Right Column (1/4 Width on Desktop) */}
-        <div className="col-span-1 xl:col-span-1 flex flex-col gap-4">
+        <div className="col-span-1 xl:col-span-1 flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
           <TrebuyetVnimaniya />
         </div>
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-5 3xl:gap-6">
         <DengiNaSchetax date={date} branch={branch} />
         <DebitorskayaZadoljennost date={date} branch={branch} />
         <CreditorskayaZadoljennost date={date} branch={branch} />
@@ -53,4 +53,5 @@ export function DashboardPage({ date, branch = 1 }: DashboardPageProps) {
     </div>
   )
 }
+
 

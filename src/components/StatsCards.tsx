@@ -169,27 +169,27 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
   ]
 
   return (
-    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-10 gap-3 mt-6">
+    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-10 gap-3 xl:gap-3.5 2xl:gap-3.5 3xl:gap-4 mt-4 sm:mt-6">
       {isLoading && !data ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />) : defaultStats.map((stat, idx) => {
         const IconComponent = stat.icon
         return (
           <div
             key={idx}
-            className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-[130px]"
+            className="flex flex-col justify-between p-3 sm:p-3.5 2xl:p-3.5 3xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-[130px] 2xl:min-h-[138px]"
           >
             {/* Header: Icon + Title */}
-            <div className="flex items-start gap-2 sm:gap-2.5 mb-3">
+            <div className="flex items-start gap-2 sm:gap-2.5 mb-2.5">
               <div className={cn("p-1.5 rounded-full shrink-0 flex items-center justify-center", stat.iconColor)}>
                 <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <h3 className="text-[8px] sm:text-[8px] xl:text-[8px] font-bold tracking-wide text-zinc-400 leading-tight">
+              <h3 className="text-[9px] sm:text-[10px] 2xl:text-[9.5px] 3xl:text-[11px] font-bold tracking-wide text-zinc-400 leading-tight">
                 {stat.title}
               </h3>
             </div>
 
             {/* Content: Value + Unit / Progress */}
             <div className="flex flex-col gap-1 mb-2">
-              <div className="text-sm xl:text-[15px] font-extrabold text-zinc-100 tracking-tight leading-none">
+              <div className="text-sm sm:text-[15px] xl:text-base 2xl:text-[15px] 3xl:text-lg font-extrabold text-zinc-100 tracking-tight leading-none">
                 {stat.value}
               </div>
               {stat.progress !== undefined ? (
@@ -200,7 +200,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
                   />
                 </div>
               ) : (
-                <span className="text-[10px] text-zinc-500 font-medium">
+                <span className="text-[10px] 3xl:text-[11px] text-zinc-500 font-medium">
                   {stat.unit}
                 </span>
               )}
@@ -209,13 +209,13 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
             {/* Footer: Trend */}
             <div
               className={cn(
-                "flex items-center gap-1 text-[10px] font-bold mt-auto shrink-0 flex-wrap",
+                "flex items-center gap-1 text-[10px] 3xl:text-[11px] font-bold mt-auto shrink-0 flex-wrap",
                 stat.trend.isPositive ? "text-emerald-500" : "text-rose-500"
               )}
             >
               <span>{stat.trend.isUp ? "▲" : "▼"}</span>
-              <span className="text-[9px]">{stat.trend.value}</span>
-              <span className="text-zinc-500 font-medium font-sans text-[9px]">
+              <span className="text-[9px] 3xl:text-[10px]">{stat.trend.value}</span>
+              <span className="text-zinc-500 font-medium font-sans text-[9px] 3xl:text-[10px]">
                 {stat.trend.label}
               </span>
             </div>

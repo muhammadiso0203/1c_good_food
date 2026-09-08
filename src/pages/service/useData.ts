@@ -6,9 +6,13 @@ import type { DateRange } from "react-day-picker"
 import type { StatsCard } from "./interface"
 
 export const useData = (dateRange?: DateRange, branch: number = 1) => {
-    const data_nach = dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : "01.01.2026"
-    const data_kon = dateRange?.to ? format(dateRange.to, "dd.MM.yyyy") : (dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : "04.12.2026")
+    const now = new Date()
+    const defaultFrom = new Date(now.getFullYear(), 0, 1)
+
+    const data_nach = dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : format(defaultFrom, "dd.MM.yyyy")
+    const data_kon = dateRange?.to ? format(dateRange.to, "dd.MM.yyyy") : (dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : format(now, "dd.MM.yyyy"))
     const branchId = Number(branch) || 1
+
 
     return useQuery({
         queryKey: ["data", data_nach, data_kon, branchId],

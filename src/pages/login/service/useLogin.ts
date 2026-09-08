@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import api from "@/config/config";
+import { encodeBase64 } from "@/lib/auth";
 
 export interface LoginCredentials {
   username: string;
@@ -17,7 +18,7 @@ export const useLogin = () => {
   return useMutation<UserResponse, Error, LoginCredentials>({
     mutationFn: async ({ username, password }) => {
       // console.log(api.defaults.baseURL);
-      const token = btoa(`${username}:${password}`);
+      const token = encodeBase64(`${username}:${password}`);
       const response = await api.post<UserResponse>(
         "/dashboard/user",
         {},
@@ -31,3 +32,4 @@ export const useLogin = () => {
     },
   });
 };
+

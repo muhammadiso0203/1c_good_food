@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Eye, EyeOff, LockKeyhole, User2, Loader2 } from "lucide-react";
 
-import { checkAuth, setAuthSession } from "@/lib/auth";
+import { checkAuth, setAuthSession, encodeBase64 } from "@/lib/auth";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,8 +47,19 @@ const Login = () => {
       {
         onSuccess: (res) => {
           if (res && res.success !== false) {
-            const token = btoa(`${username}:${password}`);
+            const token = encodeBase64(`${username}:${password}`);
             setAuthSession(username, token);
+
+            // Set default date from beginning of current year to today
+            const now = new Date();
+            const defaultFrom = new Date(now.getFullYear(), 0, 1);
+            localStorage.setItem(
+              "selected_date_range",
+              JSON.stringify({
+                from: defaultFrom.toISOString(),
+                to: now.toISOString(),
+              })
+            );
 
             toast.success("Muvaffaqiyatli tizimga kirdingiz", {
               position: "top-right",
@@ -64,17 +75,37 @@ const Login = () => {
         onError: (error: unknown) => {
           const apiError = error as {
             response?: {
-              data?: { message?: string };
+              status?: number;
+              data?: string | { message?: string; error?: string; [key: string]: unknown };
             };
             message?: string;
           };
-          const errorMsg =
-            apiError.response?.data?.message ||
-            apiError.message ||
-            "Login yoki parol noto'g'ri!";
+
+          let errorMsg = "Login yoki parol noto'g'ri!";
+          const rawData = apiError.response?.data;
+
+          if (apiError.response?.status === 401) {
+            errorMsg = "Login yoki parol noto'g'ri (yoki foydalanuvchi vaqtincha bloklangan)!";
+          } else if (typeof rawData === "string") {
+            // Check if rawData is an HTML error page from IIS
+            if (rawData.includes("<html") || rawData.includes("<!DOCTYPE") || rawData.includes("<title>")) {
+              errorMsg = "Login yoki parol noto'g'ri!";
+            } else {
+              errorMsg = rawData;
+            }
+          } else if (rawData && typeof rawData === "object") {
+            if (rawData.message) {
+              errorMsg = String(rawData.message);
+            } else if (rawData.error) {
+              errorMsg = String(rawData.error);
+            }
+          } else if (apiError.message) {
+            errorMsg = apiError.message;
+          }
+
           toast.error("Kirishda xatolik!", {
             description: errorMsg,
-            duration: 4000,
+            duration: 5000,
           });
         },
       }

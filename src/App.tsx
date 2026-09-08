@@ -8,56 +8,18 @@ import { NelikvidPage } from "./pages/NelikvidPage"
 import Login from "./pages/login/login"
 import { checkAuth } from "./lib/auth"
 
-const STORAGE_KEY = "selected_date_range"
-const BRANCH_STORAGE_KEY = "selected_branch"
-
-const getInitialDate = (): DateRange | undefined => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      if (parsed.from) {
-        return {
-          from: new Date(parsed.from),
-          to: parsed.to ? new Date(parsed.to) : undefined,
-        }
-      }
-    }
-  } catch (e) {
-    console.error("Error reading saved date:", e)
-  }
+export const getDefaultDateRange = (): DateRange => {
+  const now = new Date()
   return {
-    from: new Date(2026, 0, 1),
-    to: new Date(2026, 11, 4),
+    from: new Date(now.getFullYear(), 0, 1), // 01.01 of current year
+    to: now, // today
   }
 }
 
-const getInitialBranch = (): number => {
-  try {
-    const saved = localStorage.getItem(BRANCH_STORAGE_KEY)
-    if (saved) {
-      const parsed = Number(saved)
-      if (!isNaN(parsed) && [1, 2, 3, 4].includes(parsed)) {
-        return parsed
-      }
-    }
-  } catch (e) {
-    console.error("Error reading saved branch:", e)
-  }
-  return 1
-}
+const ProtectedLayout = () => {
+  const [date, setDate] = useState<DateRange | undefined>(getDefaultDateRange)
+  const [branch, setBranch] = useState<number>(1)
 
-const ProtectedLayout = ({
-  date,
-  branch,
-  onDateChange,
-  onBranchChange,
-}: {
-  date: DateRange | undefined
-  branch: number
-  onDateChange: (date: DateRange | undefined) => void
-  onBranchChange: (branch: number) => void
-}) => {
   if (!checkAuth()) {
     return <Navigate to="/login" replace />
   }
@@ -67,10 +29,10 @@ const ProtectedLayout = ({
       <Header
         date={date}
         branch={branch}
-        onDateChange={onDateChange}
-        onBranchChange={onBranchChange}
+        onDateChange={setDate}
+        onBranchChange={setBranch}
       />
-      <main className="w-full max-w-[1800px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-10 flex-1">
+      <main className="w-full max-w-[2000px] 2xl:max-w-[2560px] 3xl:max-w-[3200px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 2xl:px-10 pb-12 flex-1">
         <Routes>
           <Route path="/" element={<DashboardPage date={date} branch={branch} />} />
           <Route path="/dashboard" element={<DashboardPage date={date} branch={branch} />} />
@@ -83,51 +45,12 @@ const ProtectedLayout = ({
 }
 
 const App = () => {
-  const [date, setDate] = useState<DateRange | undefined>(getInitialDate)
-  const [branch, setBranch] = useState<number>(getInitialBranch)
-
-  const handleDateChange = (newDate: DateRange | undefined) => {
-    setDate(newDate)
-    if (newDate) {
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            from: newDate.from ? newDate.from.toISOString() : null,
-            to: newDate.to ? newDate.to.toISOString() : null,
-          })
-        )
-      } catch (e) {
-        console.error("Error saving date:", e)
-      }
-    }
-  }
-
-  const handleBranchChange = (newBranch: number) => {
-    setBranch(newBranch)
-    try {
-      localStorage.setItem(BRANCH_STORAGE_KEY, String(newBranch))
-    } catch (e) {
-      console.error("Error saving branch:", e)
-    }
-  }
-
   return (
     <BrowserRouter>
       <Toaster richColors position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/*"
-          element={
-            <ProtectedLayout
-              date={date}
-              branch={branch}
-              onDateChange={handleDateChange}
-              onBranchChange={handleBranchChange}
-            />
-          }
-        />
+        <Route path="/*" element={<ProtectedLayout />} />
       </Routes>
     </BrowserRouter>
   )
