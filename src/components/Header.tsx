@@ -53,17 +53,17 @@ export function Header({
   const [selectedDate, setSelectedDate] = useState<DateRange | undefined>(externalDate)
   const [selectedBranch, setSelectedBranch] = useState<number>(externalBranch || 1)
 
-  useEffect(() => {
-    if (externalDate !== undefined) {
-      setSelectedDate(externalDate)
-    }
-  }, [externalDate])
-
-  useEffect(() => {
-    if (externalBranch !== undefined) {
-      setSelectedBranch(externalBranch)
-    }
-  }, [externalBranch])
+  // Synchronize changed parent filters before rendering children, keeping local drafts.
+  const [previousDate, setPreviousDate] = useState(externalDate)
+  const [previousBranch, setPreviousBranch] = useState(externalBranch)
+  if (externalDate !== previousDate) {
+    setPreviousDate(externalDate)
+    if (externalDate !== undefined) setSelectedDate(externalDate)
+  }
+  if (externalBranch !== previousBranch) {
+    setPreviousBranch(externalBranch)
+    if (externalBranch !== undefined) setSelectedBranch(externalBranch)
+  }
 
   const [isOpen, setIsOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)

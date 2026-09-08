@@ -28,9 +28,9 @@ export function TopTovari({ date, branch }: TopTovariProps) {
       const match = key.match(/^Топ10ТоваровПоПрдажам_(\d+)_(.*)$/i)
       if (match) {
         const rank = parseInt(match[1], 10)
-        let rawName = match[2]
+        const rawName = match[2]
         // Clean up underscores and extra spaces from dynamic backend keys
-        let name = rawName
+        const name = rawName
           .replace(/^_+/, "")
           .replace(/_+$/, "")
           .replace(/__/g, " ")

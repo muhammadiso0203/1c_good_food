@@ -28,10 +28,10 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
         // Look up dynamically by matching key or fallback
         for (const key in apiData) {
           if (key.startsWith(`РасчётныйСчёт_${reg.key}`)) {
-            schet = apiData[key] || 0
+            schet = apiData[key as `РасчётныйСчёт_${string}`] || 0
           }
           if (key.startsWith(`Касса_${reg.key}`)) {
-            kassa = apiData[key] || 0
+            kassa = apiData[key as `Касса_${string}`] || 0
           }
         }
       }

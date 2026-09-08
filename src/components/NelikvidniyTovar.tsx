@@ -1,3 +1,4 @@
+import type { StatsCard } from "../pages/service/interface"
 import { useState, useMemo } from "react"
 import { useData } from "../pages/service/useData"
 import type { DateRange } from "react-day-picker"
@@ -18,7 +19,7 @@ interface NelikvidItem {
  * Kalit formati:  "НеликвидныйТовар_<tovar_nomi>"
  * Qiymat formati: "<filial>_<ostatok>_<summa>_<bez_dvijeniya>"
  */
-function parseNelikvidData(data: Record<string, any> | undefined): NelikvidItem[] {
+function parseNelikvidData(data: StatsCard | undefined): NelikvidItem[] {
   if (!data) return []
 
   const prefix = "НеslikvidnийТовар_"
@@ -27,7 +28,7 @@ function parseNelikvidData(data: Record<string, any> | undefined): NelikvidItem[
   const items: NelikvidItem[] = []
 
   for (const [key, value] of Object.entries(data)) {
-    let tovarName = ""
+    let tovarName: string
     if (key.startsWith(prefix)) {
       tovarName = key.slice(prefix.length)
     } else if (key.startsWith(prefix2)) {

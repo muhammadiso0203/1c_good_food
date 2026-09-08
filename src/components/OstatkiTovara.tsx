@@ -28,7 +28,7 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
 
 
   const data: OstatokItem[] = useMemo(() => {
-    let rawItems = DEFAULT_BRANCHES.map((b) => {
+    const rawItems = DEFAULT_BRANCHES.map((b) => {
       let val = 0
       if (apiData) {
         for (const k in apiData) {

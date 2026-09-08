@@ -1,3 +1,4 @@
+import type { StatsCard } from "../pages/service/interface"
 import { useMemo } from "react"
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import type { DateRange } from "react-day-picker"
@@ -17,7 +18,7 @@ interface CreditorskayaProps {
   branch?: number
 }
 
-function parseNumeric(val: any): number {
+function parseNumeric(val: StatsCard[string]): number {
   if (val === undefined || val === null) return 0
   if (typeof val === "number") return isNaN(val) ? 0 : val
   if (typeof val === "string") {
@@ -29,7 +30,7 @@ function parseNumeric(val: any): number {
 }
 
 function getCreditorVal(
-  apiData: any,
+  apiData: StatsCard | undefined,
   type: "15" | "15_30" | "30_60" | "60_90" | "90" | "itogo"
 ): number {
   if (!apiData || typeof apiData !== "object") return 0

@@ -17,7 +17,7 @@ export const useData = (dateRange?: DateRange, branch: number = 1) => {
     return useQuery({
         queryKey: ["data", data_nach, data_kon, branchId],
         queryFn: async () => {
-            const res = await api.post<StatsCard>('/dashboard/mainpage', {
+            const res = await api.post<StatsCard | StatsCard[]>('/dashboard/mainpage', {
 
                 data_nach,
                 data_kon,

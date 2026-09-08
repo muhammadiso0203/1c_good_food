@@ -17,5 +17,7 @@ export interface StatsCard {
     НеликвидныйТоварИзменение_30дней?: number
     ПросроченнаяДебиторка?: number
     ПросроченнаяДебиторкаИзменение?: number
-    [key: string]: any
+    [key: `РасчётныйСчёт_${string}`]: number | undefined
+    [key: `Касса_${string}`]: number | undefined
+    [key: string]: number | string | null | undefined
 }

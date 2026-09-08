@@ -8,7 +8,7 @@ import { NelikvidPage } from "./pages/NelikvidPage"
 import Login from "./pages/login/login"
 import { checkAuth } from "./lib/auth"
 
-export const getDefaultDateRange = (): DateRange => {
+const getDefaultDateRange = (): DateRange => {
   const now = new Date()
   return {
     from: new Date(now.getFullYear(), 0, 1), // 01.01 of current year
@@ -46,7 +46,7 @@ const ProtectedLayout = () => {
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/GOOD_FOOD">
       <Toaster richColors position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
