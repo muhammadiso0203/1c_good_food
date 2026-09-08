@@ -142,13 +142,13 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
   const totalFormatted =
     totalSumma >= 1_000_000_000
       ? (totalSumma / 1_000_000_000).toLocaleString("ru-RU", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
       : (totalSumma / 1_000_000).toLocaleString("ru-RU", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
 
   const unit = totalSumma >= 1_000_000_000 ? "млрд сум" : "млн сум"
 
