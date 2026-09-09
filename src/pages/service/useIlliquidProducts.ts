@@ -1,11 +1,9 @@
 import { api } from "../../config/config"
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
-
 import type { DateRange } from "react-day-picker"
-import type { StatsCard } from "./interface"
 
-export const useData = (dateRange?: DateRange, branch: number = 1) => {
+export const useIlliquidProducts = (dateRange?: DateRange, branch: number = 1) => {
     const now = new Date()
     const defaultFrom = new Date(now.getFullYear(), 0, 1)
 
@@ -13,12 +11,10 @@ export const useData = (dateRange?: DateRange, branch: number = 1) => {
     const data_kon = dateRange?.to ? format(dateRange.to, "dd.MM.yyyy") : (dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : format(now, "dd.MM.yyyy"))
     const branchId = Number(branch) || 1
 
-
     return useQuery({
-        queryKey: ["data", data_nach, data_kon, branchId],
+        queryKey: ["illiquidproduct", data_nach, data_kon, branchId],
         queryFn: async () => {
-            const res = await api.post<StatsCard | StatsCard[]>('/dashboard/mainpage', {
-
+            const payload = {
                 data_nach,
                 data_kon,
                 items: [
@@ -26,16 +22,14 @@ export const useData = (dateRange?: DateRange, branch: number = 1) => {
                         ID: branchId
                     }
                 ]
-            })
-            const raw = res.data
-            return Array.isArray(raw) ? raw[0] : raw
+            }
+
+            const res = await api.post('/dashboard/illiquidproduct', payload)
+            return res.data
         },
-        staleTime: 1000 * 5, // 5 soniya
+        staleTime: 1000 * 60 * 5, // 5 daqiqa keshda saqlash
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: false,
-        refetchOnMount: true,
+        refetchOnMount: false,
     })
 }
-
-export { useIlliquidProducts } from "./useIlliquidProducts"
-

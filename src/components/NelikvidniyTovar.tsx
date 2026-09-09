@@ -1,6 +1,5 @@
-import type { StatsCard } from "../pages/service/interface"
 import { useState, useMemo } from "react"
-import { useData } from "../pages/service/useData"
+import { useIlliquidProducts } from "../pages/service/useIlliquidProducts"
 import type { DateRange } from "react-day-picker"
 import { Loader2, Search } from "lucide-react"
 
@@ -16,61 +15,161 @@ interface NelikvidItem {
 
 /**
  * Backenddan kelgan ma'lumotlarni parse qilish.
- * Kalit formati:  "НеликвидныйТовар_<tovar_nomi>"
- * Qiymat formati: "<filial>_<ostatok>_<summa>_<bez_dvijeniya>"
+ * /illiquidproducts endpointi massiv, items/data obyekt yoki kalit-qiymat formatida qaytarishi mumkin.
  */
-function parseNelikvidData(data: StatsCard | undefined): NelikvidItem[] {
-  if (!data) return []
+function parseNelikvidData(raw: unknown): NelikvidItem[] {
+  if (!raw) return []
 
-  const prefix = "НеslikvidnийТовар_"
-  const prefix2 = "НеликвидныйТовар_"
+  const data =
+    Array.isArray(raw) && raw.length === 1 && typeof raw[0] === "object" && raw[0] !== null &&
+    !("Товар" in raw[0] || "tovar" in raw[0] || "Номенклатура" in raw[0] || "product" in raw[0])
+      ? raw[0]
+      : raw
 
-  const items: NelikvidItem[] = []
+  // 1. Agar to'g'ridan-to'g'ri massiv bo'lsa
+  if (Array.isArray(data)) {
+    const items: NelikvidItem[] = []
+    for (const row of data) {
+      if (!row || typeof row !== "object") continue
 
-  for (const [key, value] of Object.entries(data)) {
-    let tovarName: string
-    if (key.startsWith(prefix)) {
-      tovarName = key.slice(prefix.length)
-    } else if (key.startsWith(prefix2)) {
-      tovarName = key.slice(prefix2.length)
-    } else {
-      continue
+      const r = row as Record<string, unknown>
+
+      const tovarRaw =
+        r.Товар ?? r.Номенклатура ?? r.tovar ?? r.product ?? r.name ?? r.ТоварНаименование ?? ""
+      const tovar = String(tovarRaw)
+        .replace(/___/g, " ")
+        .replace(/__/g, " ")
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+
+      const filialRaw =
+        r.Филиал ?? r.Склад ?? r.filial ?? r.branch ?? r.warehouse ?? r.Подразделение ?? ""
+      const filial = String(filialRaw).trim()
+
+      const ostatokRaw =
+        r.Остаток ?? r.Количество ?? r.ostatok ?? r.qty ?? r.quantity ?? "0"
+      const ostatok =
+        typeof ostatokRaw === "number"
+          ? ostatokRaw.toLocaleString("ru-RU")
+          : String(ostatokRaw).trim()
+
+      const summaRaw =
+        r.Сумма ?? r.summa ?? r.amount ?? r.Стоимость ?? r.sum ?? 0
+      const rawNum =
+        typeof summaRaw === "number"
+          ? summaRaw
+          : parseFloat(String(summaRaw).replace(/\s/g, "").replace(",", ".")) || 0
+
+      const daysRaw =
+        r.БезДвижения ?? r.Дней ?? r.ДнейБезДвижения ?? r.days ?? r.Срок ?? 0
+      let days = 0
+      let bezDvijeniyaStr = ""
+      if (typeof daysRaw === "number") {
+        days = daysRaw
+        bezDvijeniyaStr = `${days} дн.`
+      } else {
+        days = parseInt(String(daysRaw).replace(/\D/g, ""), 10) || 0
+        bezDvijeniyaStr = String(daysRaw).includes("дн") ? String(daysRaw).trim() : `${days} дн.`
+      }
+
+      if (tovar) {
+        items.push({
+          tovar,
+          filial,
+          ostatok,
+          summa: rawNum,
+          summaFormatted: Math.round(rawNum)
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+          bezDvijeniya: bezDvijeniyaStr,
+          days,
+        })
+      }
     }
-
-    // Tovar nomini tozalash: ___ -> " ", __ -> " ", _ -> " "
-    tovarName = tovarName
-      .replace(/___/g, " ")
-      .replace(/__/g, " ")
-      .replace(/_/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-
-    if (typeof value !== "string") continue
-
-    const parts = value.split("_")
-    if (parts.length < 4) continue
-
-    const bezDvijeniyaStr = parts[parts.length - 1].trim()
-    const summaStr = parts[parts.length - 2].trim()
-    const ostatok = parts[parts.length - 3].trim()
-    const filial = parts.slice(0, parts.length - 3).join(" ").trim()
-
-    const rawNum = parseInt(summaStr.replace(/\s/g, ""), 10) || 0
-    const days = parseInt(bezDvijeniyaStr.replace(/\D/g, ""), 10) || 0
-
-    items.push({
-      tovar: tovarName,
-      filial,
-      ostatok,
-      summa: rawNum,
-      summaFormatted: rawNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
-      bezDvijeniya: `${days} дн.`,
-      days,
-    })
+    if (items.length > 0) {
+      return items.sort((a, b) => b.days - a.days)
+    }
   }
 
-  // Eng ko'p to'xtab qolganlari bo'yicha saralash
-  return items.sort((a, b) => b.days - a.days)
+  // 2. Agar items, data yoki products ichida massiv bo'lsa
+  if (typeof data === "object" && data !== null) {
+    const obj = data as Record<string, unknown>
+    if (Array.isArray(obj.items)) return parseNelikvidData(obj.items)
+    if (Array.isArray(obj.data)) return parseNelikvidData(obj.data)
+    if (Array.isArray(obj.products)) return parseNelikvidData(obj.products)
+
+    // 3. Kalit-qiymat ko'rinishidagi ma'lumotlar ("НеликвидныйТовар_...")
+    const prefix1 = "НеslikvidnийТовар_"
+    const prefix2 = "НеликвидныйТовар_"
+    const prefix3 = "Nelikvid_"
+
+    const items: NelikvidItem[] = []
+
+    for (const [key, value] of Object.entries(obj)) {
+      let tovarName = ""
+      if (key.startsWith(prefix1)) {
+        tovarName = key.slice(prefix1.length)
+      } else if (key.startsWith(prefix2)) {
+        tovarName = key.slice(prefix2.length)
+      } else if (key.startsWith(prefix3)) {
+        tovarName = key.slice(prefix3.length)
+      } else {
+        continue
+      }
+
+      tovarName = tovarName
+        .replace(/___/g, " ")
+        .replace(/__/g, " ")
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+
+      if (typeof value === "string") {
+        const parts = value.split("_")
+        if (parts.length >= 4) {
+          const bezDvijeniyaStr = parts[parts.length - 1].trim()
+          const summaStr = parts[parts.length - 2].trim()
+          const ostatok = parts[parts.length - 3].trim()
+          const filial = parts.slice(0, parts.length - 3).join(" ").trim()
+
+          const rawNum = parseInt(summaStr.replace(/\s/g, ""), 10) || 0
+          const days = parseInt(bezDvijeniyaStr.replace(/\D/g, ""), 10) || 0
+
+          items.push({
+            tovar: tovarName,
+            filial,
+            ostatok,
+            summa: rawNum,
+            summaFormatted: rawNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+            bezDvijeniya: `${days} дн.`,
+            days,
+          })
+        }
+      } else if (typeof value === "object" && value !== null) {
+        const row = value as Record<string, unknown>
+        const filial = String(row.filial || row.Филиал || row.Склад || "")
+        const ostatok = String(row.ostatok || row.Остаток || row.count || "0")
+        const summa = Number(row.summa || row.Сумма || 0)
+        const days = Number(row.days || row.Дней || 0)
+        items.push({
+          tovar: tovarName,
+          filial,
+          ostatok,
+          summa,
+          summaFormatted: Math.round(summa)
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, " "),
+          bezDvijeniya: `${days} дн.`,
+          days,
+        })
+      }
+    }
+
+    return items.sort((a, b) => b.days - a.days)
+  }
+
+  return []
 }
 
 function getSeverity(days: number) {
@@ -101,7 +200,7 @@ interface NelikvidniyTovarProps {
 }
 
 export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
-  const { data, isLoading, isFetching } = useData(date, branch)
+  const { data, isLoading, isFetching } = useIlliquidProducts(date, branch)
 
   const [searchTerm, setSearchTerm] = useState("")
 
