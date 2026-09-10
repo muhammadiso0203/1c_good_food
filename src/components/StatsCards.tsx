@@ -35,7 +35,7 @@ export interface StatCardProps {
 
 const formatNumber = (val?: number) => {
   if (val === undefined || val === null) return "0"
-  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(val / 1000)
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(val)
 }
 
 const formatTrend = (val?: number, label = "за период", invertPositive = false) => {
@@ -89,7 +89,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ПРОДАЖИ СЕГОДНЯ",
       value: formatNumber(data?.ПродажиСегодня),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ПродажиИзменениеДень, "к вчера"),
       icon: ShoppingCart,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
@@ -97,7 +97,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ПРОДАЖИ ЗА ПЕРИОД",
       value: formatNumber(data?.ПродажиПериод),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ПродажиИзменениеПериод, "за период"),
       icon: BarChart3,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
@@ -113,7 +113,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ВАЛОВАЯ ПРИБЫЛЬ",
       value: formatNumber(data?.ВаловаяПрибыль),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ВаловаяПрибыльИзменение, "за период"),
       icon: TrendingUp,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
@@ -121,7 +121,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ОСТАТОК ТОВАРА",
       value: formatNumber(data?.ОстатокТовара),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ОстатокТовараИзменение, "за период"),
       icon: Package,
       iconColor: "bg-blue-950/40 text-blue-400 border border-blue-500/20",
@@ -129,7 +129,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ДЕНЬГИ НА СЧЕТАХ",
       value: formatNumber(data?.ДеньгиНаСчетах),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ДеньгиНаСчетахИзменение, "за период"),
       icon: Landmark,
       iconColor: "bg-blue-950/40 text-blue-400 border border-blue-500/20",
@@ -137,7 +137,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ДЕНЬГИ В КАССАХ",
       value: formatNumber(data?.ДеньгиВКассах),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ДеньгиВКассахИзменение, "за период"),
       icon: Coins,
       iconColor: "bg-purple-950/40 text-purple-400 border border-purple-500/20",
@@ -145,7 +145,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ДЕБИТОРСКАЯ ЗАДОЛЖ.",
       value: formatNumber(data?.ДебиторскаяЗадолженность),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ДебиторскаяЗадолженностьИзменение, "за период"),
       icon: UserCheck,
       iconColor: "bg-amber-950/40 text-amber-400 border border-amber-500/20",
@@ -153,7 +153,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ПРОСРОЧЕННАЯ ДЕБИТОРКА",
       value: formatNumber(data?.ПросроченнаяДебиторка),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.ПросроченнаяДебиторкаИзменение, "за период"),
       icon: Clock,
       iconColor: "bg-rose-950/40 text-rose-400 border border-rose-500/20",
@@ -161,7 +161,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "НЕЛИКВИДНЫЙ ТОВАР",
       value: formatNumber(data?.НеликвидныйТовар_30дней),
-      unit: "млн. сум",
+      unit: "тыс сум",
       trend: formatTrend(data?.НеликвидныйТоварИзменение_30дней, "за период"),
       icon: PackageMinus,
       iconColor: "bg-orange-950/40 text-orange-400 border border-orange-500/20",
