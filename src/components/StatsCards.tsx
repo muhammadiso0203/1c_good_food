@@ -35,7 +35,7 @@ export interface StatCardProps {
 
 const formatNumber = (val?: number) => {
   if (val === undefined || val === null) return "0"
-  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(val / 1000)
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(val)
 }
 
 const formatTrend = (val?: number, label = "за период", invertPositive = false) => {
