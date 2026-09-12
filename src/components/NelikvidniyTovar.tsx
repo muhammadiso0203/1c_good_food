@@ -17,6 +17,24 @@ interface NelikvidItem {
  * Backenddan kelgan ma'lumotlarni parse qilish.
  * /illiquidproducts endpointi massiv, items/data obyekt yoki kalit-qiymat formatida qaytarishi mumkin.
  */
+function cleanTovarName(nameStr: string): string {
+  if (!nameStr) return ""
+  return nameStr
+    // 1. Prefix va unga ulangan indeks raqamlarini olib tashlash (masalan: "НеликвидныйТовар_289__", "Nelikvid_12_")
+    .replace(/^(?:НеslikvidnийТовар|НеликвидныйТовар|Nelikvid)_*(?:\d+_+)?/i, "")
+    // 2. Agar boshida indeks raqami va ikkita yoki undan ortiq underscore bo'lsa (masalan: "289__")
+    .replace(/^\d+_{2,}/, "")
+    // 3. Underscore larni bo'sh joyga almashtirish
+    .replace(/_+/g, " ")
+    // 4. Ortiqcha bo'shliqlarni tozalash
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+/**
+ * Backenddan kelgan ma'lumotlarni parse qilish.
+ * /illiquidproducts endpointi massiv, items/data obyekt yoki kalit-qiymat formatida qaytarishi mumkin.
+ */
 function parseNelikvidData(raw: unknown): NelikvidItem[] {
   if (!raw) return []
 
@@ -36,12 +54,7 @@ function parseNelikvidData(raw: unknown): NelikvidItem[] {
 
       const tovarRaw =
         r.Товар ?? r.Номенклатура ?? r.tovar ?? r.product ?? r.name ?? r.ТоварНаименование ?? ""
-      const tovar = String(tovarRaw)
-        .replace(/___/g, " ")
-        .replace(/__/g, " ")
-        .replace(/_/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
+      const tovar = cleanTovarName(String(tovarRaw))
 
       const filialRaw =
         r.Филиал ?? r.Склад ?? r.filial ?? r.branch ?? r.warehouse ?? r.Подразделение ?? ""
@@ -100,30 +113,14 @@ function parseNelikvidData(raw: unknown): NelikvidItem[] {
     if (Array.isArray(obj.products)) return parseNelikvidData(obj.products)
 
     // 3. Kalit-qiymat ko'rinishidagi ma'lumotlar ("НеликвидныйТовар_...")
-    const prefix1 = "НеslikvidnийТовар_"
-    const prefix2 = "НеликвидныйТовар_"
-    const prefix3 = "Nelikvid_"
+    const isNelikvidKey = /^(?:НеslikvidnийТовар|НеликвидныйТовар|Nelikvid)/i
 
     const items: NelikvidItem[] = []
 
     for (const [key, value] of Object.entries(obj)) {
-      let tovarName = ""
-      if (key.startsWith(prefix1)) {
-        tovarName = key.slice(prefix1.length)
-      } else if (key.startsWith(prefix2)) {
-        tovarName = key.slice(prefix2.length)
-      } else if (key.startsWith(prefix3)) {
-        tovarName = key.slice(prefix3.length)
-      } else {
-        continue
-      }
+      if (!isNelikvidKey.test(key)) continue
 
-      tovarName = tovarName
-        .replace(/___/g, " ")
-        .replace(/__/g, " ")
-        .replace(/_/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
+      const tovarName = cleanTovarName(key)
 
       if (typeof value === "string") {
         const parts = value.split("_")
