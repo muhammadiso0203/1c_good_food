@@ -11,13 +11,12 @@ interface AccountData {
 
 const REGIONS = [
   { key: "Джизакская_область", name: "Джизак" },
-  { key: "Сурдарьинская_область_", name: "Сырдарья" },
+  { key: "Сырдарьинская_область", name: "Гулистан" },
   { key: "Ташкентская_область", name: "Ташкент" },
 ]
 
 export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: number }) {
   const { data: apiData, isLoading } = useData(date, branch)
-
 
   const data: AccountData[] = useMemo(() => {
     return REGIONS.map((reg) => {
@@ -25,13 +24,27 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
       let kassa = 0
 
       if (apiData) {
-        // Look up dynamically by matching key or fallback
-        for (const key in apiData) {
-          if (key.startsWith(`РасчётныйСчёт_${reg.key}`)) {
-            schet = apiData[key as `РасчётныйСчёт_${string}`] || 0
-          }
-          if (key.startsWith(`Касса_${reg.key}`)) {
-            kassa = apiData[key as `Касса_${string}`] || 0
+        for (const [key, rawVal] of Object.entries(apiData)) {
+          const kLower = key.toLowerCase()
+          const regKeyLower = reg.key.toLowerCase()
+          const regNameLower = reg.name.toLowerCase()
+          const val =
+            typeof rawVal === "number"
+              ? rawVal
+              : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
+
+          const matchesRegion =
+            kLower.includes(regKeyLower) ||
+            kLower.includes(regNameLower) ||
+            (reg.name === "Гулистан" && (kLower.includes("сырдар") || kLower.includes("гулис"))) ||
+            (reg.name === "Джизак" && (kLower.includes("джизак") || kLower.includes("жиззах")))
+
+          if (matchesRegion) {
+            if (kLower.includes("расч") || kLower.includes("счет") || kLower.includes("счёт")) {
+              schet = val
+            } else if (kLower.includes("касс")) {
+              kassa = val
+            }
           }
         }
       }

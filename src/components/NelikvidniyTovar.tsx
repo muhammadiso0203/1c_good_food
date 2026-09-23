@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react"
 import { useIlliquidProducts } from "../pages/service/useIlliquidProducts"
 import type { DateRange } from "react-day-picker"
-import { Loader2, Search } from "lucide-react"
+import { Loader2, Search, FileSpreadsheet } from "lucide-react"
+import { exportToExcel } from "../lib/exportToExcel"
+import { toast } from "sonner"
 
 interface NelikvidItem {
   tovar: string
@@ -223,6 +225,35 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
     return totalSumma.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }, [totalSumma])
 
+  const handleExportExcel = () => {
+    if (!filteredItems.length) {
+      toast.error("Eksport qilish uchun ma'lumot mavjud emas")
+      return
+    }
+
+    try {
+      const now = new Date()
+      const dateStr = now.toISOString().slice(0, 10)
+      exportToExcel({
+        filename: `Nelikvidniy_tovar_${dateStr}`,
+        sheetName: "Неликвидный товар",
+        columns: [
+          { header: "№", key: "__index__", width: 6 },
+          { header: "Товар", key: "tovar", width: 35 },
+          { header: "Филиал", key: "filial", width: 22 },
+          { header: "Остаток", key: "ostatok", width: 15 },
+          { header: "Сумма (сум)", key: "summa", width: 18, format: (val) => Number(val) || 0 },
+          { header: "Без движения", key: "bezDvijeniya", width: 16 },
+        ],
+        data: filteredItems,
+      })
+      toast.success("Excel fayl muvaffaqiyatli yuklandi!")
+    } catch (err) {
+      console.error("Export error:", err)
+      toast.error("Excel faylni yuklashda xatolik yuz berdi")
+    }
+  }
+
   return (
     <div className="w-full flex flex-col gap-5">
       {/* Asosiy jadval bloki */}
@@ -243,10 +274,10 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
             </h2>
           </div>
 
-          {/* Qidiruv va filial filtri */}
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Qidiruv va eksport tugmasi */}
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
             {/* Qidiruv input */}
-            <div className="relative w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-auto">
               <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -256,6 +287,18 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
                 className="w-full sm:w-64 h-8 pl-8 pr-3 bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 rounded-lg focus:outline-none focus:border-zinc-700 transition-colors"
               />
             </div>
+
+            {/* Excelga yuklash tugmasi */}
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={filteredItems.length === 0}
+              title="Экспорт в Excel"
+              className="h-8 px-3 inline-flex items-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 rounded-lg text-xs font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Excel</span>
+            </button>
           </div>
         </div>
 

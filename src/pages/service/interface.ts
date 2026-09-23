@@ -18,6 +18,7 @@ export interface StatsCard {
     ПросроченнаяДебиторка?: number
     ПросроченнаяДебиторкаИзменение?: number
     [key: `РасчётныйСчёт_${string}`]: number | undefined
+    [key: `РасчетныйСчет_${string}`]: number | undefined
     [key: `Касса_${string}`]: number | undefined
     [key: string]: number | string | null | undefined
 }

@@ -18,28 +18,34 @@ interface OstatkiTovaraProps {
 }
 
 const DEFAULT_BRANCHES = [
-  { key: "ОстаткиТовара_Сурдарьинская", filial: "Сырдарья", defaultVal: 7608731562.59, color: "#3b82f6", bgKlass: "bg-blue-500" },
-  { key: "ОстаткиТовара_Ташкент", filial: "Ташкент", defaultVal: 660373429.79, color: "#10b981", bgKlass: "bg-emerald-500" },
-  { key: "ОстаткиТовара_Жиззах", filial: "Джизак", defaultVal: 357826997.38, color: "#f59e0b", bgKlass: "bg-amber-500" },
+  { key: "Сырдарьинская_область", filial: "Гулистан", defaultVal: 0, color: "#3b82f6", bgKlass: "bg-blue-500" },
+  { key: "Ташкентская_область", filial: "Ташкент", defaultVal: 0, color: "#10b981", bgKlass: "bg-emerald-500" },
+  { key: "Джизакская_область", filial: "Джизак", defaultVal: 0, color: "#f59e0b", bgKlass: "bg-amber-500" },
 ]
 
 export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
   const { data: apiData, isLoading } = useData(date, branch)
 
-
   const data: OstatokItem[] = useMemo(() => {
     const rawItems = DEFAULT_BRANCHES.map((b) => {
       let val = 0
       if (apiData) {
-        for (const k in apiData) {
+        for (const [k, raw] of Object.entries(apiData)) {
           const kLower = k.toLowerCase()
-          if (
-            k === b.key ||
-            (kLower.includes("остаткитовара") && kLower.includes(b.filial.toLowerCase())) ||
-            (kLower.includes("остаток") && kLower.includes(b.filial.toLowerCase()))
-          ) {
-            const raw = apiData[k]
-            val = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
+          const bKeyLower = b.key.toLowerCase()
+          const bFilialLower = b.filial.toLowerCase()
+
+          if (kLower.includes("остат") || k.startsWith("ОстаткиТовара_")) {
+            const matchesBranch =
+              kLower.includes(bKeyLower) ||
+              kLower.includes(bFilialLower) ||
+              (b.key.includes("Сырдар") && (kLower.includes("сырдар") || kLower.includes("сурдар") || kLower.includes("гулис"))) ||
+              (b.key.includes("Ташкент") && (kLower.includes("ташкент") || kLower.includes("тошкент"))) ||
+              (b.key.includes("Джизак") && (kLower.includes("джизак") || kLower.includes("жиззах")))
+
+            if (matchesBranch) {
+              val = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
+            }
           }
         }
       } else {

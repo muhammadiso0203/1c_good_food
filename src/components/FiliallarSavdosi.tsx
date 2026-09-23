@@ -9,7 +9,7 @@ export interface FilialSavdo {
 
 const defaultData: FilialSavdo[] = [
   {
-    nomi: "Сырдарья",
+    nomi: "Гулистон",
     bugun: 625450000,
     oy: 12450800000,
     reja: 14500000000,
