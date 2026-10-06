@@ -1,6 +1,8 @@
 export interface StatsCard {
     ПродажиСегодня?: number
     ПродажиИзменениеДень?: number
+    ВыполнениеПлана_вопрос_3?: number
+    ВыполнениеПланаИзменение_вопрос_3?: number
     ПродажиПериод?: number
     ПродажиИзменениеПериод?: number
     ВаловаяПрибыль?: number
@@ -17,6 +19,11 @@ export interface StatsCard {
     НеликвидныйТоварИзменение_30дней?: number
     ПросроченнаяДебиторка?: number
     ПросроченнаяДебиторкаИзменение?: number
+    СтатусОстатков_вопрос_14_НормаЗапаса?: string | number
+    СтатусОстатков_вопрос_14_Мало?: string | number
+    СтатусОстатков_вопрос_14_НетВНаличии?: string | number
+    [key: `ПродажиПоФилиалам_${string}`]: string | number | undefined
+    [key: `СтатусОстатков_${string}`]: string | number | undefined
     [key: `РасчётныйСчёт_${string}`]: number | undefined
     [key: `РасчетныйСчет_${string}`]: number | undefined
     [key: `Касса_${string}`]: number | undefined
@@ -57,4 +64,4 @@ export interface IlliquidProductItem {
     Срок?: string | number
 
     [key: string]: unknown
-}
+}

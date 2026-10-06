@@ -26,7 +26,7 @@ export function DashboardPage({ date, branch = 1 }: DashboardPageProps) {
         <div className="col-span-1 xl:col-span-3 flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
           {/* Top Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 2xl:gap-5 3xl:gap-6">
-            <FiliallarSavdosi />
+            <FiliallarSavdosi date={date} branch={branch} />
             <SavdoDinamikasi date={date} branch={branch} />
           </div>
 
@@ -34,7 +34,7 @@ export function DashboardPage({ date, branch = 1 }: DashboardPageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-5 3xl:gap-6">
             <OstatkiTovara date={date} branch={branch} />
             <TopTovari date={date} branch={branch} />
-            <StatusOstatkov />
+            <StatusOstatkov date={date} branch={branch} />
           </div>
         </div>
 

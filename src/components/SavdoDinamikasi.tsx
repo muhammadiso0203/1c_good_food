@@ -1,4 +1,3 @@
-import { Loader2 } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -24,6 +23,36 @@ const MONTHS = [
   { name: "Дек", full: "Декабрь", defCurr: undefined, defPrev: 0 },
 ]
 
+function SavdoDinamikasiSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full overflow-hidden animate-pulse flex flex-col justify-between">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
+          <div className="h-3 w-48 bg-zinc-700/60 rounded" />
+          <div className="flex items-center gap-4">
+            <div className="h-2.5 w-20 bg-zinc-700/40 rounded" />
+            <div className="h-2.5 w-20 bg-zinc-700/40 rounded" />
+          </div>
+        </div>
+
+        {/* Chart Skeleton */}
+        <div className="h-43.75 w-full flex flex-col justify-between pt-2 pb-2">
+          <div className="w-full border-b border-zinc-800/30 h-8" />
+          <div className="w-full border-b border-zinc-800/30 h-8" />
+          <div className="w-full border-b border-zinc-800/30 h-8" />
+          <div className="w-full border-b border-zinc-800/30 h-8" />
+          <div className="flex justify-between pt-2">
+            {["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"].map((m, i) => (
+              <span key={i} className="text-[9px] text-zinc-600">{m}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 600, height: 175 })
@@ -31,7 +60,6 @@ export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: n
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
   const { data: apiData, isLoading } = useData(date, branch)
-
 
   const data: ChartDataPoint[] = useMemo(() => {
     return MONTHS.map((m, i) => {
@@ -76,6 +104,10 @@ export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: n
     observer.observe(containerRef.current)
     return () => observer.disconnect()
   }, [])
+
+  if (isLoading && !apiData) {
+    return <SavdoDinamikasiSkeleton />
+  }
 
   const paddingLeft = 35, paddingRight = dimensions.width < 400 ? 30 : 65, paddingTop = 20, paddingBottom = 25
   const chartWidth = dimensions.width - paddingLeft - paddingRight
@@ -132,13 +164,6 @@ export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: n
   return (
     <div className="w-full h-full">
       <div ref={containerRef} className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full overflow-hidden">
-        {isLoading && !apiData && (
-          <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
-            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-            <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
-          </div>
-        )}
-
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ДИНАМИКА ПРОДАЖ (МЕСЯЦЫ)

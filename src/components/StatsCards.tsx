@@ -54,7 +54,7 @@ const formatTrend = (val?: number, label = "за период", invertPositive =
 
 const SkeletonCard = () => {
   return (
-    <div className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 rounded-xl animate-pulse min-h-[130px]">
+    <div className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 rounded-xl animate-pulse min-h-32.5">
       {/* Header */}
       <div className="flex items-start gap-2 mb-3">
         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-700/60 shrink-0" />
@@ -104,9 +104,9 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     },
     {
       title: "ВЫПОЛНЕНИЕ ПЛАНА",
-      value: "86%",
-      progress: 86,
-      trend: { value: "6 п.п.", label: "за период", isPositive: true, isUp: true },
+      value: `${formatNumber(data?.ВыполнениеПлана_вопрос_3)}%`,
+      progress: data?.ВыполнениеПлана_вопрос_3,
+      trend: formatTrend(Number(data?.ВыполнениеПланаИзменение_вопрос_3), "за период"),
       icon: Target,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
     },
@@ -169,13 +169,13 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
   ]
 
   return (
-    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-10 gap-3 xl:gap-3.5 2xl:gap-3.5 3xl:gap-4 mt-4 sm:mt-6">
+    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-3 xl:gap-3.5 2xl:gap-3.5 3xl:gap-4 mt-4 sm:mt-6">
       {isLoading && !data ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />) : defaultStats.map((stat, idx) => {
         const IconComponent = stat.icon
         return (
           <div
             key={idx}
-            className="flex flex-col justify-between p-3 sm:p-3.5 2xl:p-3.5 3xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-[130px] 2xl:min-h-[138px]"
+            className="flex flex-col justify-between p-3 sm:p-3.5 2xl:p-3.5 3xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-32.5 2xl:min-h-34.5"
           >
             {/* Header: Icon + Title */}
             <div className="flex items-start gap-2 sm:gap-2.5 mb-2.5">

@@ -146,6 +146,82 @@ export function exportDashboardToExcel(
   wsBranches["!cols"] = [{ wch: 6 }, { wch: 25 }, { wch: 25 }]
   XLSX.utils.book_append_sheet(workbook, wsBranches, "Остатки по филиалам")
 
+  // SHEET: Продажи по филиалам
+  const salesBranchRows: (string | number)[][] = [
+    ["ПРОДАЖИ ПО ФИЛИАЛАМ"],
+    ["Период:", `${dateFromStr} — ${dateToStr}`],
+    [],
+    ["№", "Филиал", "Сегодня (сум)", "За период (сум)", "План (сум)", "Выполнение (%)"],
+  ]
+  const branchNameMapping: Record<string, string> = {
+    "3": "Гулистон",
+    "2": "Ташкент",
+    "4": "Джизак",
+  }
+  let sTodayTotal = 0
+  let sMonthTotal = 0
+  let sPlanTotal = 0
+  let sRowIdx = 1
+
+  if (apiData) {
+    for (const [k, v] of Object.entries(apiData)) {
+      if (k.toLowerCase().startsWith("продажипофилиалам_") && typeof v === "string") {
+        const id = k.replace(/^ПродажиПоФилиалам_/i, "").trim()
+        const fName = branchNameMapping[id] || `Филиал ${id}`
+        const parts = v.split("_")
+        const today = parseNumeric(parts[0])
+        const month = parseNumeric(parts[1])
+        const plan = parseNumeric(parts[2])
+        let percent = parseNumeric(parts[3])
+        if (percent === 0 && plan > 0 && month > 0) {
+          percent = Math.round((month / plan) * 100)
+        }
+        sTodayTotal += today
+        sMonthTotal += month
+        sPlanTotal += plan
+        salesBranchRows.push([sRowIdx++, fName, today, month, plan, `${percent}%`])
+      }
+    }
+  }
+  const totalPercent = sPlanTotal > 0 ? Math.round((sMonthTotal / sPlanTotal) * 100) : 0
+  salesBranchRows.push(["", "ИТОГО", sTodayTotal, sMonthTotal, sPlanTotal, `${totalPercent}%`])
+
+  const wsSalesBranches = XLSX.utils.aoa_to_sheet(salesBranchRows)
+  wsSalesBranches["!cols"] = [{ wch: 6 }, { wch: 20 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, { wch: 18 }]
+  XLSX.utils.book_append_sheet(workbook, wsSalesBranches, "Продажи по филиалам")
+
+  // SHEET: Статус остатков (SKU)
+  const skuRows: (string | number)[][] = [
+    ["СТАТУС ОСТАТКОВ (SKU)"],
+    ["Период:", `${dateFromStr} — ${dateToStr}`],
+    [],
+    ["№", "Категория", "Количество (SKU)", "Доля (%)"],
+  ]
+  const parseSkuVal = (val: unknown) => {
+    if (typeof val === "string") {
+      const parts = val.split("_")
+      return { sku: parseNumeric(parts[0]), foiz: parseNumeric(parts[1]) }
+    }
+    return { sku: parseNumeric(val), foiz: 0 }
+  }
+  const skuNorm = parseSkuVal(apiData?.СтатусОстатков_вопрос_14_НормаЗапаса)
+  const skuMalo = parseSkuVal(apiData?.СтатусОстатков_вопрос_14_Мало)
+  const skuNet = parseSkuVal(apiData?.СтатусОстатков_вопрос_14_НетВНаличии)
+  const totalSkuSum = skuNorm.sku + skuMalo.sku + skuNet.sku
+  const getFoiz = (item: { sku: number; foiz: number }) => {
+    if (item.foiz > 0) return item.foiz
+    if (totalSkuSum > 0 && item.sku > 0) return Math.round((item.sku / totalSkuSum) * 100)
+    return 0
+  }
+  skuRows.push([1, "Норма запаса", skuNorm.sku, `${getFoiz(skuNorm)}%`])
+  skuRows.push([2, "Мало (<= мин. запаса)", skuMalo.sku, `${getFoiz(skuMalo)}%`])
+  skuRows.push([3, "Нет в наличии", skuNet.sku, `${getFoiz(skuNet)}%`])
+  skuRows.push(["", "ВСЕГО SKU", totalSkuSum, "100%"])
+
+  const wsSku = XLSX.utils.aoa_to_sheet(skuRows)
+  wsSku["!cols"] = [{ wch: 6 }, { wch: 30 }, { wch: 20 }, { wch: 15 }]
+  XLSX.utils.book_append_sheet(workbook, wsSku, "Статус остатков (SKU)")
+
   // 3-SHEET: Debitorlik va Kreditorlik qarzdorlik
   const debtPeriods = [
     { label: "до 15 дней", debKey: "15", credKey: "15" },

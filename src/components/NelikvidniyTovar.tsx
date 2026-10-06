@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react"
 import { useIlliquidProducts } from "../pages/service/useIlliquidProducts"
 import type { DateRange } from "react-day-picker"
-import { Loader2, Search, FileSpreadsheet } from "lucide-react"
-import { exportToExcel } from "../lib/exportToExcel"
-import { toast } from "sonner"
+import { Search } from "lucide-react"
 
 interface NelikvidItem {
   tovar: string
@@ -15,28 +13,16 @@ interface NelikvidItem {
   days: number
 }
 
-/**
- * Backenddan kelgan ma'lumotlarni parse qilish.
- * /illiquidproducts endpointi massiv, items/data obyekt yoki kalit-qiymat formatida qaytarishi mumkin.
- */
 function cleanTovarName(nameStr: string): string {
   if (!nameStr) return ""
   return nameStr
-    // 1. Prefix va unga ulangan indeks raqamlarini olib tashlash (masalan: "НеликвидныйТовар_289__", "Nelikvid_12_")
     .replace(/^(?:НеslikvidnийТовар|НеликвидныйТовар|Nelikvid)_*(?:\d+_+)?/i, "")
-    // 2. Agar boshida indeks raqami va ikkita yoki undan ortiq underscore bo'lsa (masalan: "289__")
     .replace(/^\d+_{2,}/, "")
-    // 3. Underscore larni bo'sh joyga almashtirish
     .replace(/_+/g, " ")
-    // 4. Ortiqcha bo'shliqlarni tozalash
     .replace(/\s+/g, " ")
     .trim()
 }
 
-/**
- * Backenddan kelgan ma'lumotlarni parse qilish.
- * /illiquidproducts endpointi massiv, items/data obyekt yoki kalit-qiymat formatida qaytarishi mumkin.
- */
 function parseNelikvidData(raw: unknown): NelikvidItem[] {
   if (!raw) return []
 
@@ -46,7 +32,6 @@ function parseNelikvidData(raw: unknown): NelikvidItem[] {
       ? raw[0]
       : raw
 
-  // 1. Agar to'g'ridan-to'g'ri massiv bo'lsa
   if (Array.isArray(data)) {
     const items: NelikvidItem[] = []
     for (const row of data) {
@@ -107,16 +92,13 @@ function parseNelikvidData(raw: unknown): NelikvidItem[] {
     }
   }
 
-  // 2. Agar items, data yoki products ichida massiv bo'lsa
   if (typeof data === "object" && data !== null) {
     const obj = data as Record<string, unknown>
     if (Array.isArray(obj.items)) return parseNelikvidData(obj.items)
     if (Array.isArray(obj.data)) return parseNelikvidData(obj.data)
     if (Array.isArray(obj.products)) return parseNelikvidData(obj.products)
 
-    // 3. Kalit-qiymat ko'rinishidagi ma'lumotlar ("НеликвидныйТовар_...")
     const isNelikvidKey = /^(?:НеslikvidnийТовар|НеликвидныйТовар|Nelikvid)/i
-
     const items: NelikvidItem[] = []
 
     for (const [key, value] of Object.entries(obj)) {
@@ -198,14 +180,69 @@ interface NelikvidniyTovarProps {
   branch?: number
 }
 
+function NelikvidniySkeleton() {
+  return (
+    <div className="w-full flex flex-col gap-5">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col min-h-120 mt-4 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 sm:pb-4 sm:mb-4 border-b border-zinc-800/40">
+          <div className="h-3 w-64 sm:w-80 bg-zinc-700/60 rounded" />
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <div className="h-8 w-full sm:w-64 bg-zinc-900/60 border border-zinc-800 rounded-lg" />
+            <div className="h-8 w-20 bg-emerald-950/40 border border-emerald-500/20 rounded-lg shrink-0" />
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="overflow-x-auto -mx-1 sm:mx-0">
+          <table className="w-full min-w-145 border-collapse text-left">
+            <thead>
+              <tr className="border-b border-zinc-800/40 pb-2">
+                <th className="py-2.5 px-3 w-12"><div className="h-2.5 w-4 bg-zinc-700/40 rounded mx-auto" /></th>
+                <th className="py-2.5 px-3"><div className="h-2.5 w-20 bg-zinc-700/40 rounded" /></th>
+                <th className="py-2.5 px-3"><div className="h-2.5 w-16 bg-zinc-700/40 rounded" /></th>
+                <th className="py-2.5 px-3"><div className="h-2.5 w-16 bg-zinc-700/40 rounded ml-auto" /></th>
+                <th className="py-2.5 px-3"><div className="h-2.5 w-24 bg-zinc-700/40 rounded ml-auto" /></th>
+                <th className="py-2.5 px-3"><div className="h-2.5 w-24 bg-zinc-700/40 rounded ml-auto" /></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/20">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <tr key={i}>
+                  <td className="py-3 px-3 text-center"><div className="h-3 w-4 bg-zinc-700/40 rounded mx-auto" /></td>
+                  <td className="py-3 px-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-zinc-700/60 shrink-0" />
+                      <div className="h-3 bg-zinc-700/60 rounded" style={{ width: `${Math.max(120, 260 - i * 18)}px` }} />
+                    </div>
+                  </td>
+                  <td className="py-3 px-3"><div className="h-3 w-16 bg-zinc-700/50 rounded" /></td>
+                  <td className="py-3 px-3"><div className="h-3 w-12 bg-zinc-700/50 rounded ml-auto" /></td>
+                  <td className="py-3 px-3"><div className="h-3 w-24 bg-zinc-700/60 rounded ml-auto" /></td>
+                  <td className="py-3 px-3"><div className="h-5 w-16 bg-amber-950/40 border border-amber-500/20 rounded-md ml-auto" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer Skeleton */}
+        <div className="mt-4 pt-3 border-t-2 border-zinc-800/60 flex items-center justify-between">
+          <div className="h-3 w-28 bg-zinc-700/60 rounded" />
+          <div className="h-4 w-40 bg-zinc-700/60 rounded" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
-  const { data, isLoading, isFetching } = useIlliquidProducts(date, branch)
+  const { data, isLoading } = useIlliquidProducts(date, branch)
 
   const [searchTerm, setSearchTerm] = useState("")
 
   const allItems = useMemo(() => parseNelikvidData(data), [data])
 
-  // Qidiruv va filtr
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
       const matchSearch =
@@ -216,7 +253,6 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
     })
   }, [allItems, searchTerm])
 
-  // Umumiy statistika
   const totalSumma = useMemo(() => {
     return filteredItems.reduce((sum, item) => sum + item.summa, 0)
   }, [filteredItems])
@@ -225,47 +261,15 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
     return totalSumma.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }, [totalSumma])
 
-  const handleExportExcel = () => {
-    if (!filteredItems.length) {
-      toast.error("Eksport qilish uchun ma'lumot mavjud emas")
-      return
-    }
 
-    try {
-      const now = new Date()
-      const dateStr = now.toISOString().slice(0, 10)
-      exportToExcel({
-        filename: `Nelikvidniy_tovar_${dateStr}`,
-        sheetName: "Неликвидный товар",
-        columns: [
-          { header: "№", key: "__index__", width: 6 },
-          { header: "Товар", key: "tovar", width: 35 },
-          { header: "Филиал", key: "filial", width: 22 },
-          { header: "Остаток", key: "ostatok", width: 15 },
-          { header: "Сумма (сум)", key: "summa", width: 18, format: (val) => Number(val) || 0 },
-          { header: "Без движения", key: "bezDvijeniya", width: 16 },
-        ],
-        data: filteredItems,
-      })
-      toast.success("Excel fayl muvaffaqiyatli yuklandi!")
-    } catch (err) {
-      console.error("Export error:", err)
-      toast.error("Excel faylni yuklashda xatolik yuz berdi")
-    }
+  if (isLoading && !data) {
+    return <NelikvidniySkeleton />
   }
 
   return (
     <div className="w-full flex flex-col gap-5">
       {/* Asosiy jadval bloki */}
       <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col min-h-120 mt-4">
-        {/* Loading holati */}
-        {(isLoading || isFetching) && (
-          <div className="absolute inset-0 z-30 bg-gray-900/70 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
-            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-            <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
-          </div>
-        )}
-
         {/* Sarlavha va filtrlar qatori */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 sm:pb-4 sm:mb-4 border-b border-zinc-800/40">
           <div>
@@ -274,37 +278,22 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
             </h2>
           </div>
 
-          {/* Qidiruv va eksport tugmasi */}
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* Qidiruv input */}
-            <div className="relative flex-1 sm:w-auto">
-              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Поиск товара или филиала..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full sm:w-64 h-8 pl-8 pr-3 bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 rounded-lg focus:outline-none focus:border-zinc-700 transition-colors"
-              />
-            </div>
-
-            {/* Excelga yuklash tugmasi */}
-            <button
-              type="button"
-              onClick={handleExportExcel}
-              disabled={filteredItems.length === 0}
-              title="Экспорт в Excel"
-              className="h-8 px-3 inline-flex items-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 rounded-lg text-xs font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Excel</span>
-            </button>
+          {/* Qidiruv */}
+          <div className="relative flex-1 sm:w-auto">
+            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Поиск товара или филиала..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:w-64 h-8 pl-8 pr-3 bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 rounded-lg focus:outline-none focus:border-zinc-700 transition-colors"
+            />
           </div>
         </div>
 
         {/* Jadval */}
         <div className="overflow-x-auto -mx-1 sm:mx-0">
-          <table className="w-full min-w-[580px] border-collapse text-left">
+          <table className="w-full min-w-145 border-collapse text-left">
             <thead>
               <tr className="border-b border-zinc-800/40 text-[10px] uppercase tracking-wider text-zinc-500">
                 <th className="py-2.5 px-3 text-center w-12 font-medium">№</th>

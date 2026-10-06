@@ -9,15 +9,12 @@ import {
   Boxes,
   User,
   RotateCw,
-  FileSpreadsheet,
 } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 import { NavLink, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { clearAuthSession, getAuthUser } from "../lib/auth"
-import { useData } from "../pages/service/useData"
-import { exportDashboardToExcel } from "../lib/exportToExcel"
 
 import { cn } from "../lib/utils"
 import { Button } from "./ui/button"
@@ -52,27 +49,7 @@ export function Header({
   const queryClient = useQueryClient()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const { data: dashboardData, isLoading: isDataLoading } = useData(externalDate, externalBranch)
 
-  const handleExportExcel = () => {
-    if (!dashboardData) {
-      toast.error("Ma'lumotlar yuklanmoqda, iltimos kuting...")
-      return
-    }
-    const branchLabels: Record<number, string> = {
-      1: "Все филиалы",
-      2: "Ташкент",
-      3: "Сырдарья",
-      4: "Джизак",
-    }
-    try {
-      exportDashboardToExcel(dashboardData, externalDate, branchLabels[externalBranch || 1] || "Все филиалы")
-      toast.success("Dashboard hisoboti Excelga yuklandi!")
-    } catch (err) {
-      console.error("Dashboard export error:", err)
-      toast.error("Excel faylni yuklashda xatolik yuz berdi")
-    }
-  }
 
   // Local buffered states for date and branch
   const [selectedDate, setSelectedDate] = useState<DateRange | undefined>(externalDate)
@@ -331,7 +308,7 @@ export function Header({
                     Ташкент
                   </SelectItem>
                   <SelectItem value="3" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer text-xs sm:text-sm">
-                    Сырдарья
+                    Гулистан
                   </SelectItem>
                   <SelectItem value="4" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer text-xs sm:text-sm">
                     Джизак
@@ -352,17 +329,7 @@ export function Header({
               <span>Обновить</span>
             </Button>
 
-            {/* Excel Export Button */}
-            <Button
-              type="button"
-              onClick={handleExportExcel}
-              disabled={isDataLoading || !dashboardData}
-              className="h-10 px-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm rounded-md transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95 shrink-0 disabled:opacity-50"
-              title="Выгрузка всех данных дашборда в Excel"
-            >
-              <FileSpreadsheet className="h-4 w-4 text-white" />
-              <span>Excel</span>
-            </Button>
+
 
             {/* Logged in User Badge */}
             <div className="flex items-center gap-2.5 h-10 px-3.5 bg-zinc-900/40 border border-zinc-800 text-zinc-200 rounded-md shrink-0">

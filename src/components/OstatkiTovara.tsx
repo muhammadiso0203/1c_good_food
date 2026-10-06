@@ -2,7 +2,6 @@ import { useMemo } from "react"
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
-import { Loader2 } from "lucide-react"
 
 interface OstatokItem {
   filial: string
@@ -22,6 +21,67 @@ const DEFAULT_BRANCHES = [
   { key: "Ташкентская_область", filial: "Ташкент", defaultVal: 0, color: "#10b981", bgKlass: "bg-emerald-500" },
   { key: "Джизакская_область", filial: "Джизак", defaultVal: 0, color: "#f59e0b", bgKlass: "bg-amber-500" },
 ]
+
+function OstatkiSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full flex flex-col justify-between animate-pulse">
+        {/* Header Skeleton */}
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
+          <div className="h-3 w-36 bg-zinc-700/60 rounded" />
+        </div>
+
+        {/* Content Layout Skeleton */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 min-h-40 flex-1">
+          {/* Doughnut Skeleton */}
+          <div className="w-28 h-28 sm:w-30 sm:h-30 rounded-full border-8 border-zinc-700/50 flex items-center justify-center shrink-0">
+            <div className="flex flex-col items-center gap-1">
+              <div className="h-4 w-12 bg-zinc-700/70 rounded" />
+              <div className="h-2 w-10 bg-zinc-700/40 rounded" />
+            </div>
+          </div>
+
+          {/* Table Skeleton */}
+          <div className="w-full flex-1">
+            <div className="grid grid-cols-12 gap-2 mb-2 pb-2 border-b border-zinc-800/30">
+              <div className="col-span-5 h-2.5 w-14 bg-zinc-700/40 rounded" />
+              <div className="col-span-7 flex justify-end">
+                <div className="h-2.5 w-20 bg-zinc-700/40 rounded" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 py-1 items-center">
+                  <div className="col-span-5 flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-sm bg-zinc-700/60 shrink-0" />
+                    <div className="h-2.5 w-16 bg-zinc-700/50 rounded" />
+                  </div>
+                  <div className="col-span-5 flex justify-end">
+                    <div className="h-2.5 w-20 bg-zinc-700/60 rounded" />
+                  </div>
+                  <div className="col-span-2 flex justify-end">
+                    <div className="h-2.5 w-8 bg-zinc-700/40 rounded" />
+                  </div>
+                </div>
+              ))}
+
+              <div className="grid grid-cols-12 gap-2 py-2 mt-1 border-t border-zinc-800/40 items-center">
+                <div className="col-span-5 h-2.5 w-12 bg-zinc-700/50 rounded" />
+                <div className="col-span-5 flex justify-end">
+                  <div className="h-2.5 w-20 bg-zinc-700/60 rounded" />
+                </div>
+                <div className="col-span-2 flex justify-end">
+                  <div className="h-2.5 w-8 bg-zinc-700/40 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
   const { data: apiData, isLoading } = useData(date, branch)
@@ -68,6 +128,10 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
     }))
   }, [apiData])
 
+  if (isLoading && !apiData) {
+    return <OstatkiSkeleton />
+  }
+
   const totalOstatok = useMemo(() => {
     return data.reduce((sum, item) => sum + item.ostatok, 0)
   }, [data])
@@ -81,14 +145,6 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
   return (
     <div className="w-full h-full">
       <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none h-full flex flex-col justify-between">
-        {/* Loading Overlay */}
-        {isLoading && !apiData && (
-          <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2 transition-all duration-200">
-            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-            <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
-          </div>
-        )}
-
         {/* Header Title */}
         <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">

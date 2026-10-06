@@ -3,7 +3,6 @@ import { useMemo } from "react"
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
-import { Loader2 } from "lucide-react"
 
 interface DebitorItem {
   period: string
@@ -61,6 +60,46 @@ function getDebitorVal(
   return 0
 }
 
+function DebitorskayaSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full animate-pulse">
+        {/* Header Skeleton */}
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
+          <div className="h-3 w-44 bg-zinc-700/60 rounded" />
+        </div>
+
+        {/* Content Layout Skeleton */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 min-h-44 flex-1">
+          {/* Left Side: Doughnut Skeleton + Button */}
+          <div className="flex flex-col items-center shrink-0">
+            <div className="w-32 h-32 rounded-full border-8 border-zinc-700/50 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="h-4 w-12 bg-zinc-700/70 rounded" />
+                <div className="h-2 w-10 bg-zinc-700/40 rounded" />
+              </div>
+            </div>
+            <div className="mt-3 h-7 w-24 bg-zinc-700/60 rounded-lg" />
+          </div>
+
+          {/* Right Side: Rows Skeleton */}
+          <div className="w-full flex-1 flex flex-col justify-center gap-3.5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <div className="w-3 h-3 rounded-xs bg-zinc-700/60 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <div className="h-2.5 w-24 bg-zinc-700/60 rounded" />
+                  <div className="h-2 w-32 bg-zinc-700/40 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
   const { data: apiData, isLoading } = useData(date, branch)
 
@@ -80,7 +119,6 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
     const do30 = do15 + ot15do30
     let rawTotal = do30 + ot30do60 + ot60do90 + bolee90
 
-    // Agar har bir davr 0 bo'lsa-yu, lekin Itogo mavjud bo'lsa
     if (rawTotal === 0) {
       const itogo = getDebitorVal(apiData, "itogo")
       if (itogo > 0) {
@@ -138,6 +176,9 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
     }
   }, [apiData])
 
+  if (isLoading && !apiData) {
+    return <DebitorskayaSkeleton />
+  }
 
   const totalFormatted =
     totalSumma >= 1_000_000_000
@@ -154,15 +195,12 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full relative">
+      <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full overflow-hidden">
         {/* Header Title */}
-        <div className="mb-3.5 pb-2.5 sm:mb-4 sm:pb-3 border-b border-zinc-800/40 flex items-center justify-between">
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             ДЕБИТОРСКАЯ ЗАДОЛЖЕННОСТЬ
           </h2>
-          {isLoading && !apiData && (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-500" />
-          )}
         </div>
 
         {/* Content Layout */}
@@ -222,7 +260,7 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
               <div key={idx} className="flex items-start gap-2.5">
                 {/* Color Box */}
                 <span
-                  className={`w-3 h-3 rounded-[2px] shrink-0 mt-0.5 ${item.bgKlass}`}
+                  className={`w-3 h-3 rounded-xs shrink-0 mt-0.5 ${item.bgKlass}`}
                 />
 
                 {/* Info */}
@@ -247,4 +285,3 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
     </div>
   )
 }
-

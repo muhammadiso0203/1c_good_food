@@ -306,7 +306,7 @@ export function Header({
                     Ташкент
                   </SelectItem>
                   <SelectItem value="3" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer text-xs sm:text-sm">
-                    Сырдарья
+                    Гулистан
                   </SelectItem>
                   <SelectItem value="4" className="hover:bg-zinc-900 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer text-xs sm:text-sm">
                     Джизак

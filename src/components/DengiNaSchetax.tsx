@@ -1,4 +1,4 @@
-import { Landmark, Coins, Loader2 } from "lucide-react"
+import { Landmark, Coins } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
 import { useMemo } from "react"
@@ -14,6 +14,70 @@ const REGIONS = [
   { key: "Сырдарьинская_область", name: "Гулистан" },
   { key: "Ташкентская_область", name: "Ташкент" },
 ]
+
+function DengiSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="h-full flex flex-col justify-between bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none animate-pulse">
+        {/* Header Title Skeleton */}
+        <div className="pb-2.5 sm:pb-3 border-b border-zinc-800/40 mb-3">
+          <div className="h-3 w-52 bg-zinc-700/60 rounded" />
+        </div>
+
+        {/* Content Columns Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 flex-1">
+          {/* Left Column */}
+          <div className="flex flex-col bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-zinc-700/60 shrink-0" />
+              <div className="h-3 w-32 bg-zinc-700/60 rounded" />
+            </div>
+            <div className="flex justify-between mb-2 pb-1.5 border-b border-zinc-800/30">
+              <div className="h-2 w-12 bg-zinc-700/40 rounded" />
+              <div className="h-2 w-16 bg-zinc-700/40 rounded" />
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-between items-center py-0.5">
+                  <div className="h-2.5 w-16 bg-zinc-700/50 rounded" />
+                  <div className="h-2.5 w-20 bg-zinc-700/60 rounded" />
+                </div>
+              ))}
+              <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-800/40">
+                <div className="h-2.5 w-10 bg-zinc-700/40 rounded" />
+                <div className="h-2.5 w-24 bg-emerald-950/40 rounded" />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="flex flex-col bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-zinc-700/60 shrink-0" />
+              <div className="h-3 w-24 bg-zinc-700/60 rounded" />
+            </div>
+            <div className="flex justify-between mb-2 pb-1.5 border-b border-zinc-800/30">
+              <div className="h-2 w-12 bg-zinc-700/40 rounded" />
+              <div className="h-2 w-16 bg-zinc-700/40 rounded" />
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-between items-center py-0.5">
+                  <div className="h-2.5 w-16 bg-zinc-700/50 rounded" />
+                  <div className="h-2.5 w-20 bg-zinc-700/60 rounded" />
+                </div>
+              ))}
+              <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-800/40">
+                <div className="h-2.5 w-10 bg-zinc-700/40 rounded" />
+                <div className="h-2.5 w-24 bg-purple-950/40 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: number }) {
   const { data: apiData, isLoading } = useData(date, branch)
@@ -57,6 +121,10 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
     })
   }, [apiData])
 
+  if (isLoading && !apiData) {
+    return <DengiSkeleton />
+  }
+
   const formatSuma = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }
@@ -67,12 +135,6 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
   return (
     <div className="w-full h-full relative">
       <div className="h-full flex flex-col justify-between bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none relative">
-        {isLoading && !apiData && (
-          <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
-            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-            <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
-          </div>
-        )}
         {/* Header Title */}
         <div className="pb-2.5 sm:pb-3 border-b border-zinc-800/40 mb-3">
           <h2 className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
