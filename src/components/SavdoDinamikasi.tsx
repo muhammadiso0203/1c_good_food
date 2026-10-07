@@ -105,14 +105,6 @@ export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: n
     return () => observer.disconnect()
   }, [])
 
-  if (isLoading && !apiData) {
-    return <SavdoDinamikasiSkeleton />
-  }
-
-  const paddingLeft = 35, paddingRight = dimensions.width < 400 ? 30 : 65, paddingTop = 20, paddingBottom = 25
-  const chartWidth = dimensions.width - paddingLeft - paddingRight
-  const chartHeight = dimensions.height - paddingTop - paddingBottom
-
   const yMax = useMemo(() => {
     let max = 12
     data.forEach((d) => {
@@ -121,6 +113,14 @@ export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: n
     })
     return Math.ceil(max)
   }, [data])
+
+  if (isLoading && !apiData) {
+    return <SavdoDinamikasiSkeleton />
+  }
+
+  const paddingLeft = 35, paddingRight = dimensions.width < 400 ? 30 : 65, paddingTop = 20, paddingBottom = 25
+  const chartWidth = dimensions.width - paddingLeft - paddingRight
+  const chartHeight = dimensions.height - paddingTop - paddingBottom
 
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => Math.round(yMax * r))
 

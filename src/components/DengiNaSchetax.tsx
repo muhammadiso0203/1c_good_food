@@ -121,6 +121,9 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
     })
   }, [apiData])
 
+  const totalSchet = useMemo(() => data.reduce((sum, item) => sum + item.schet, 0), [data])
+  const totalKassa = useMemo(() => data.reduce((sum, item) => sum + item.kassa, 0), [data])
+
   if (isLoading && !apiData) {
     return <DengiSkeleton />
   }
@@ -128,9 +131,6 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
   const formatSuma = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }
-
-  const totalSchet = useMemo(() => data.reduce((sum, item) => sum + item.schet, 0), [data])
-  const totalKassa = useMemo(() => data.reduce((sum, item) => sum + item.kassa, 0), [data])
 
   return (
     <div className="w-full h-full relative">

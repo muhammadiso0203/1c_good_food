@@ -165,14 +165,6 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
     })
   }, [apiData])
 
-  if (isLoading && !apiData) {
-    return <FiliallarSkeleton />
-  }
-
-  const formatSuma = (val: number) => {
-    return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-  }
-
   const jamiBugun = useMemo(() => items.reduce((sum, item) => sum + item.bugun, 0), [items])
   const jamiOy = useMemo(() => items.reduce((sum, item) => sum + item.oy, 0), [items])
   const jamiReja = useMemo(() => items.reduce((sum, item) => sum + item.reja, 0), [items])
@@ -186,6 +178,14 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
     }
     return 0
   }, [items, jamiOy, jamiReja])
+
+  if (isLoading && !apiData) {
+    return <FiliallarSkeleton />
+  }
+
+  const formatSuma = (val: number) => {
+    return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  }
 
   const getRangKlassi = (foiz: number) => {
     if (foiz >= 84) {

@@ -84,6 +84,11 @@ export function TopTovari({ date, branch }: TopTovariProps) {
     return extracted.map((item) => ({ name: item.name, value: item.value }))
   }, [apiData])
 
+  const maxValue = useMemo(() => {
+    if (data.length === 0) return 1
+    return Math.max(...data.map((item) => item.value))
+  }, [data])
+
   if (isLoading && !apiData) {
     return <TopTovariSkeleton />
   }
@@ -91,11 +96,6 @@ export function TopTovari({ date, branch }: TopTovariProps) {
   const formatSuma = (val: number) => {
     return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }
-
-  const maxValue = useMemo(() => {
-    if (data.length === 0) return 1
-    return Math.max(...data.map((item) => item.value))
-  }, [data])
 
   return (
     <div className="w-full h-full">

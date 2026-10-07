@@ -169,14 +169,6 @@ export function StatusOstatkov({ date, branch }: StatusOstatkovProps) {
     ]
   }, [apiData])
 
-  if (isLoading && !apiData) {
-    return <StatusOstatkovSkeleton />
-  }
-
-  const formatNumber = (val: number) => {
-    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-  }
-
   const totalSKU = useMemo(() => {
     return data.reduce((sum, item) => sum + item.sku, 0)
   }, [data])
@@ -187,6 +179,14 @@ export function StatusOstatkov({ date, branch }: StatusOstatkovProps) {
     }
     return data
   }, [data, totalSKU])
+
+  if (isLoading && !apiData) {
+    return <StatusOstatkovSkeleton />
+  }
+
+  const formatNumber = (val: number) => {
+    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  }
 
   return (
     <div className="w-full h-full">

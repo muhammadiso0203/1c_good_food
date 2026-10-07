@@ -128,13 +128,13 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
     }))
   }, [apiData])
 
-  if (isLoading && !apiData) {
-    return <OstatkiSkeleton />
-  }
-
   const totalOstatok = useMemo(() => {
     return data.reduce((sum, item) => sum + item.ostatok, 0)
   }, [data])
+
+  if (isLoading && !apiData) {
+    return <OstatkiSkeleton />
+  }
 
   const formatSuma = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
