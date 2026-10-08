@@ -16,42 +16,37 @@ interface FiliallarSavdosiProps {
   branch?: number
 }
 
-const BRANCH_CONFIG: Record<string, { name: string; order: number }> = {
-  "3": { name: "Гулистон", order: 1 },
-  "2": { name: "Ташкент", order: 2 },
-  "4": { name: "Джизак", order: 3 },
-  "сырдарья": { name: "Гулистон", order: 1 },
-  "гулистон": { name: "Гулистон", order: 1 },
-  "ташкент": { name: "Ташкент", order: 2 },
-  "джизак": { name: "Джизак", order: 3 },
+interface BranchConfig {
+  id: number
+  nomi: string
+  aliases: string[]
 }
 
-const defaultFallbackData: FilialSavdo[] = [
+const TARGET_BRANCHES: BranchConfig[] = [
   {
-    id: "3",
+    id: 3,
     nomi: "Гулистон",
-    bugun: 625450000,
-    oy: 12450800000,
-    reja: 14500000000,
-    bajarilish: 86,
+    aliases: ["3", "гулистон", "гулистан", "сырдар", "сурдар", "guliston", "gulistan"],
   },
   {
-    id: "2",
+    id: 2,
     nomi: "Ташкент",
-    bugun: 298120000,
-    oy: 6102400000,
-    reja: 7500000000,
-    bajarilish: 81,
+    aliases: ["2", "ташкент", "тошкент", "tashkent", "toshkent"],
   },
   {
-    id: "4",
+    id: 4,
     nomi: "Джизак",
-    bugun: 187330000,
-    oy: 4221600000,
-    reja: 5000000000,
-    bajarilish: 84,
+    aliases: ["4", "джизак", "жиззах", "jizzax", "dzhizak"],
   },
 ]
+
+function matchesBranch(idOrName: unknown, b: BranchConfig): boolean {
+  if (idOrName === undefined || idOrName === null) return false
+  const num = Number(idOrName)
+  if (!isNaN(num) && num === b.id) return true
+  const s = String(idOrName).toLowerCase().trim()
+  return b.aliases.some((alias) => s === alias || s.includes(alias))
+}
 
 function FiliallarSkeleton() {
   return (
@@ -112,39 +107,122 @@ function FiliallarSkeleton() {
 export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
   const { data: apiData, isLoading } = useData(date, branch)
 
-  const parseNum = (s?: string | number): number => {
+  const parseNum = (s?: unknown): number => {
+    if (s === undefined || s === null) return 0
     if (typeof s === "number") return isNaN(s) ? 0 : s
-    if (!s) return 0
     const cleaned = String(s).replace(/\s/g, "").replace(",", ".")
     const parsed = parseFloat(cleaned)
     return isNaN(parsed) ? 0 : parsed
   }
 
   const items: FilialSavdo[] = useMemo(() => {
-    if (!apiData) return defaultFallbackData
+    // 1. Find specific array for sales by branch
+    let salesArray: unknown[] = []
+    if (apiData && typeof apiData === "object") {
+      for (const [key, val] of Object.entries(apiData)) {
+        const kLower = key.toLowerCase()
+        if (
+          Array.isArray(val) &&
+          kLower.includes("продаж") &&
+          (kLower.includes("филиал") || kLower.includes("регион")) &&
+          !kLower.includes("топ") &&
+          !kLower.includes("динамик") &&
+          !kLower.includes("деньги") &&
+          !kLower.includes("остат")
+        ) {
+          salesArray = val
+          break
+        }
+      }
+    }
 
-    const parsedBranches: FilialSavdo[] = []
+    const result: FilialSavdo[] = []
 
-    for (const [key, val] of Object.entries(apiData)) {
-      if (key.toLowerCase().startsWith("продажипофилиалам_")) {
-        const idOrName = key.replace(/^ПродажиПоФилиалам_/i, "").trim()
-        const config = BRANCH_CONFIG[idOrName] || BRANCH_CONFIG[idOrName.toLowerCase()]
-        const branchName = config?.name || (idOrName.match(/^\d+$/) ? `Филиал ${idOrName}` : idOrName.replace(/_/g, " "))
+    // 1. Check array format
+    if (salesArray.length > 0) {
+      for (const item of salesArray) {
+        if (!item || typeof item !== "object") continue
+        const row = item as Record<string, unknown>
+        const idNum = Number(row.ID ?? row.id)
+        const name = String(row.Филиал ?? row.Регион ?? row.Name ?? row.name ?? row.filial ?? "").trim()
+        
+        // Skip total summary row ID 1 / "Все филиалы" when listing branches
+        const isTotalRow = idNum === 1 || name.toLowerCase().includes("все филиал") || name.toLowerCase().includes("итого")
 
-        if (typeof val === "string") {
-          const parts = val.split("_")
-          const bugun = parseNum(parts[0])
-          const oy = parseNum(parts[1])
-          const reja = parseNum(parts[2])
-          let bajarilish = parseNum(parts[3])
+        if (branch && branch !== 1) {
+          const currentConfig = TARGET_BRANCHES.find((b) => b.id === branch)
+          const isMatch = (idNum === branch) || (currentConfig && matchesBranch(name || idNum, currentConfig))
+          if (!isMatch) continue
+        } else {
+          if (isTotalRow) continue
+        }
 
-          if (bajarilish === 0 && reja > 0 && oy > 0) {
-            bajarilish = Math.round((oy / reja) * 100)
+        const bugun = parseNum(row.ПродажиСегодня ?? row.Сегодня ?? row.bugun ?? row.today ?? row.Bugun)
+        const oy = parseNum(row.ПродажиПериод ?? row.ПродажиМесяц ?? row.Месяц ?? row.oy ?? row.month ?? row.Oy ?? row.Сумма ?? row.summa)
+        const reja = parseNum(row.План ?? row.reja ?? row.plan ?? row.Reja)
+        let bajarilish = parseNum(row.ВыполненияВПроцентах ?? row.ВыполнениеВПроцентах ?? row.Выполнение ?? row.bajarilish ?? row.percent ?? row.Foiz)
+
+        if (bajarilish === 0 && reja > 0 && oy > 0) {
+          bajarilish = Math.round((oy / reja) * 100)
+        }
+
+        const known = TARGET_BRANCHES.find((b) => (idNum && b.id === idNum) || matchesBranch(name, b))
+        const displayName = known?.nomi || name || `Филиал ${idNum || result.length + 1}`
+
+        result.push({
+          id: String(idNum || known?.id || result.length + 1),
+          nomi: displayName,
+          bugun,
+          oy,
+          reja,
+          bajarilish,
+        })
+      }
+    }
+
+    // 2. Check flat format fallback if not found in array
+    if (result.length === 0 && apiData && typeof apiData === "object") {
+      const activeTargets = branch && branch !== 1
+        ? TARGET_BRANCHES.filter((b) => b.id === branch)
+        : TARGET_BRANCHES
+
+      for (const b of activeTargets) {
+        let bugun = 0
+        let oy = 0
+        let reja = 0
+        let bajarilish = 0
+        let found = false
+
+        for (const [key, val] of Object.entries(apiData)) {
+          const kLower = key.toLowerCase()
+          if (
+            (kLower.startsWith("продажипофилиалам_") || kLower.startsWith("продажипорегионам_")) &&
+            matchesBranch(kLower, b)
+          ) {
+            if (typeof val === "string") {
+              const parts = val.split("_")
+              bugun = parseNum(parts[0])
+              oy = parseNum(parts[1])
+              reja = parseNum(parts[2])
+              bajarilish = parseNum(parts[3])
+              found = true
+              break
+            } else if (typeof val === "number") {
+              oy = val
+              found = true
+              break
+            }
           }
+        }
 
-          parsedBranches.push({
-            id: idOrName,
-            nomi: branchName,
+        if (bajarilish === 0 && reja > 0 && oy > 0) {
+          bajarilish = Math.round((oy / reja) * 100)
+        }
+
+        if (found) {
+          result.push({
+            id: String(b.id),
+            nomi: b.nomi,
             bugun,
             oy,
             reja,
@@ -154,16 +232,19 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
       }
     }
 
-    if (parsedBranches.length === 0) {
-      return defaultFallbackData
+    // Filter strictly by branch if branch !== 1
+    if (branch && branch !== 1 && result.length > 0) {
+      const currentConfig = TARGET_BRANCHES.find((b) => b.id === branch)
+      return result.filter((r) => {
+        const idNum = Number(r.id)
+        if (idNum === branch) return true
+        if (currentConfig && matchesBranch(r.nomi, currentConfig)) return true
+        return false
+      })
     }
 
-    return parsedBranches.sort((a, b) => {
-      const orderA = a.id && BRANCH_CONFIG[a.id]?.order ? BRANCH_CONFIG[a.id].order : 99
-      const orderB = b.id && BRANCH_CONFIG[b.id]?.order ? BRANCH_CONFIG[b.id].order : 99
-      return orderA - orderB
-    })
-  }, [apiData])
+    return result
+  }, [apiData, branch])
 
   const jamiBugun = useMemo(() => items.reduce((sum, item) => sum + item.bugun, 0), [items])
   const jamiOy = useMemo(() => items.reduce((sum, item) => sum + item.oy, 0), [items])

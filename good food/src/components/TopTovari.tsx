@@ -25,7 +25,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
     const extracted: { rank: number; name: string; value: number }[] = []
 
     for (const key in apiData) {
-      const match = key.match(/^Топ10ТоваровПоПрдажам_(\d+)_(.*)$/i)
+      const match = key.match(/^Топ10Товаров(?:По)?Пр[о]?дажам_(\d+)_(.*)$/i) || key.match(/^Топ10Товаров.*?(\d+)_(.*)$/i)
       if (match) {
         const rank = parseInt(match[1], 10)
         const rawName = match[2]
@@ -37,7 +37,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
           .replace(/_/g, " ")
           .replace(/\s+/g, " ")
           .trim()
-        const rawVal = apiData[key]
+        const rawVal = (apiData as Record<string, unknown>)[key]
         const value = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
         extracted.push({ rank, name, value })
       }

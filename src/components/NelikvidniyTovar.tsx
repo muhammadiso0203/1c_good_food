@@ -244,14 +244,28 @@ export function NelikvidniyTovar({ date, branch }: NelikvidniyTovarProps) {
   const allItems = useMemo(() => parseNelikvidData(data), [data])
 
   const filteredItems = useMemo(() => {
+    const BRANCH_MAP: Record<number, string[]> = {
+      2: ["ташкент", "тошкент", "tashkent", "toshkent", "2"],
+      3: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "guliston", "sirdaryo", "сирдарё", "сирдарья", "3"],
+      4: ["джизак", "жиззах", "jizzax", "dzhizak", "4"],
+    }
+
     return allItems.filter((item) => {
+      if (branch && branch !== 1 && BRANCH_MAP[branch]) {
+        const filialLower = item.filial.toLowerCase()
+        if (filialLower) {
+          const matchBranch = BRANCH_MAP[branch].some((a) => filialLower.includes(a))
+          if (!matchBranch) return false
+        }
+      }
+
       const matchSearch =
         searchTerm === "" ||
         item.tovar.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.filial.toLowerCase().includes(searchTerm.toLowerCase())
       return matchSearch
     })
-  }, [allItems, searchTerm])
+  }, [allItems, searchTerm, branch])
 
   const totalSumma = useMemo(() => {
     return filteredItems.reduce((sum, item) => sum + item.summa, 0)

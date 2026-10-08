@@ -55,7 +55,7 @@ function TopTovariSkeleton() {
 }
 
 export function TopTovari({ date, branch }: TopTovariProps) {
-  const { data: apiData, isLoading } = useData(date, branch)
+  const { data: apiData, isLongLoading, isLoading } = useData(date, branch)
 
   const data: ProductSaleItem[] = useMemo(() => {
     if (!apiData) return []
@@ -63,7 +63,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
     const extracted: { rank: number; name: string; value: number }[] = []
 
     for (const key in apiData) {
-      const match = key.match(/^Топ10ТоваровПоПрдажам_(\d+)_(.*)$/i)
+      const match = key.match(/^Топ10Товаров(?:По)?Пр[о]?дажам_(\d+)_(.*)$/i) || key.match(/^Топ10Товаров.*?(\d+)_(.*)$/i)
       if (match) {
         const rank = parseInt(match[1], 10)
         const rawName = match[2]
@@ -74,7 +74,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
           .replace(/_/g, " ")
           .replace(/\s+/g, " ")
           .trim()
-        const rawVal = apiData[key]
+        const rawVal = (apiData as Record<string, unknown>)[key]
         const value = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
         extracted.push({ rank, name, value })
       }
@@ -89,7 +89,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
     return Math.max(...data.map((item) => item.value))
   }, [data])
 
-  if (isLoading && !apiData) {
+  if ((isLongLoading || isLoading) && data.length === 0) {
     return <TopTovariSkeleton />
   }
 

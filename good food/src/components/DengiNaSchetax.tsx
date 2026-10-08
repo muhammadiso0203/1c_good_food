@@ -1,4 +1,4 @@
-import { Landmark, Coins, Loader2 } from "lucide-react"
+import { Landmark, Coins } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
 import { useMemo } from "react"
@@ -9,29 +9,162 @@ interface AccountData {
   kassa: number
 }
 
-const REGIONS = [
-  { key: "Джизакская_область", name: "Джизак" },
-  { key: "Сурдарьинская_область_", name: "Сырдарья" },
-  { key: "Ташкентская_область", name: "Ташкент" },
+interface RegionConfig {
+  id: number
+  aliases: string[]
+  name: string
+}
+
+const REGIONS: RegionConfig[] = [
+  { id: 2, name: "Ташкент", aliases: ["ташкент", "тошкент", "tashkent", "toshkent", "2"] },
+  { id: 3, name: "Гулистан", aliases: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "sirdaryo", "3"] },
+  { id: 4, name: "Джизак", aliases: ["джизак", "жиззах", "jizzax", "dzhizak", "4"] },
 ]
+
+function parseNum(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  const str = String(val).replace(/\s/g, "").replace(",", ".")
+  const parsed = parseFloat(str)
+  return isNaN(parsed) ? 0 : parsed
+}
+
+function matchesBranch(idOrName: unknown, reg: RegionConfig): boolean {
+  if (idOrName === undefined || idOrName === null) return false
+  const num = Number(idOrName)
+  if (!isNaN(num) && num === reg.id) return true
+  const s = String(idOrName).toLowerCase().trim()
+  return reg.aliases.some((alias) => s === alias || s.includes(alias))
+}
+
+function DengiSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="h-full flex flex-col justify-between bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none animate-pulse">
+        {/* Header Title Skeleton */}
+        <div className="pb-2.5 sm:pb-3 border-b border-zinc-800/40 mb-3">
+          <div className="h-3 w-52 bg-zinc-700/60 rounded" />
+        </div>
+
+        {/* Content Columns Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 flex-1">
+          {/* Left Column */}
+          <div className="flex flex-col bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-zinc-700/60 shrink-0" />
+              <div className="h-3 w-32 bg-zinc-700/60 rounded" />
+            </div>
+            <div className="flex justify-between mb-2 pb-1.5 border-b border-zinc-800/30">
+              <div className="h-2 w-12 bg-zinc-700/40 rounded" />
+              <div className="h-2 w-16 bg-zinc-700/40 rounded" />
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-between items-center py-0.5">
+                  <div className="h-2.5 w-16 bg-zinc-700/50 rounded" />
+                  <div className="h-2.5 w-20 bg-zinc-700/60 rounded" />
+                </div>
+              ))}
+              <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-800/40">
+                <div className="h-2.5 w-10 bg-zinc-700/40 rounded" />
+                <div className="h-2.5 w-24 bg-emerald-950/40 rounded" />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="flex flex-col bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-zinc-700/60 shrink-0" />
+              <div className="h-3 w-24 bg-zinc-700/60 rounded" />
+            </div>
+            <div className="flex justify-between mb-2 pb-1.5 border-b border-zinc-800/30">
+              <div className="h-2 w-12 bg-zinc-700/40 rounded" />
+              <div className="h-2 w-16 bg-zinc-700/40 rounded" />
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-between items-center py-0.5">
+                  <div className="h-2.5 w-16 bg-zinc-700/50 rounded" />
+                  <div className="h-2.5 w-20 bg-zinc-700/60 rounded" />
+                </div>
+              ))}
+              <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-800/40">
+                <div className="h-2.5 w-10 bg-zinc-700/40 rounded" />
+                <div className="h-2.5 w-24 bg-purple-950/40 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: number }) {
   const { data: apiData, isLoading } = useData(date, branch)
 
-
   const data: AccountData[] = useMemo(() => {
-    return REGIONS.map((reg) => {
+    const activeRegions = branch && branch !== 1
+      ? REGIONS.filter((r) => r.id === branch)
+      : REGIONS
+
+    if (!apiData || typeof apiData !== "object") {
+      return activeRegions.map((r) => ({ filial: r.name, schet: 0, kassa: 0 }))
+    }
+
+    // Collect array data if present (e.g. ДеньгиНаСчетахПоРегионам / ДеньгиВКассахПоРегионам)
+    const schetArray: unknown[] = []
+    const kassaArray: unknown[] = []
+
+    for (const [k, v] of Object.entries(apiData)) {
+      const kLower = k.toLowerCase()
+      if (Array.isArray(v)) {
+        if (kLower.includes("счет") || kLower.includes("счёт") || kLower.includes("расч")) {
+          schetArray.push(...v)
+        } else if (kLower.includes("касс")) {
+          kassaArray.push(...v)
+        }
+      }
+    }
+
+    return activeRegions.map((reg) => {
       let schet = 0
       let kassa = 0
 
-      if (apiData) {
-        // Look up dynamically by matching key or fallback
-        for (const key in apiData) {
-          if (key.startsWith(`РасчётныйСчёт_${reg.key}`)) {
-            schet = apiData[key as `РасчётныйСчёт_${string}`] || 0
+      // 1. Check in schetArray
+      for (const item of schetArray) {
+        if (item && typeof item === "object") {
+          const row = item as Record<string, unknown>
+          const branchIdOrName = row.ID ?? row.id ?? row.Филиал ?? row.Регион ?? row.Branch ?? row.name
+          if (matchesBranch(branchIdOrName, reg)) {
+            const val = parseNum(row.Сумма ?? row.summa ?? row.Summa ?? row.amount ?? row.value ?? row.Счет ?? row.schet)
+            if (val > 0) schet = val
           }
-          if (key.startsWith(`Касса_${reg.key}`)) {
-            kassa = apiData[key as `Касса_${string}`] || 0
+        }
+      }
+
+      // 2. Check in kassaArray
+      for (const item of kassaArray) {
+        if (item && typeof item === "object") {
+          const row = item as Record<string, unknown>
+          const branchIdOrName = row.ID ?? row.id ?? row.Филиал ?? row.Регион ?? row.Branch ?? row.name
+          if (matchesBranch(branchIdOrName, reg)) {
+            const val = parseNum(row.Сумма ?? row.summa ?? row.Summa ?? row.amount ?? row.value ?? row.Касса ?? row.kassa)
+            if (val > 0) kassa = val
+          }
+        }
+      }
+
+      // 3. Fallback: check in flat object keys
+      for (const [key, rawVal] of Object.entries(apiData)) {
+        const kLower = key.toLowerCase()
+        if (matchesBranch(kLower, reg)) {
+          const val = parseNum(rawVal)
+          if (kLower.includes("расч") || kLower.includes("счет") || kLower.includes("счёт")) {
+            if (schet === 0 && val > 0) schet = val
+          } else if (kLower.includes("касс")) {
+            if (kassa === 0 && val > 0) kassa = val
           }
         }
       }
@@ -42,24 +175,22 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
         kassa,
       }
     })
-  }, [apiData])
+  }, [apiData, branch])
+
+  const totalSchet = useMemo(() => data.reduce((sum, item) => sum + item.schet, 0), [data])
+  const totalKassa = useMemo(() => data.reduce((sum, item) => sum + item.kassa, 0), [data])
+
+  if (isLoading && !apiData) {
+    return <DengiSkeleton />
+  }
 
   const formatSuma = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }
 
-  const totalSchet = useMemo(() => data.reduce((sum, item) => sum + item.schet, 0), [data])
-  const totalKassa = useMemo(() => data.reduce((sum, item) => sum + item.kassa, 0), [data])
-
   return (
     <div className="w-full h-full relative">
       <div className="h-full flex flex-col justify-between bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none relative">
-        {isLoading && !apiData && (
-          <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2">
-            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-            <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
-          </div>
-        )}
         {/* Header Title */}
         <div className="pb-2.5 sm:pb-3 border-b border-zinc-800/40 mb-3">
           <h2 className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">

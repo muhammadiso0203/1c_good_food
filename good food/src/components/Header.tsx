@@ -116,10 +116,13 @@ export function Header({
     setIsOpen(false)
   }
 
-  // When branch select changes: only updates local selectedBranch, does NOT trigger API calls yet
+  // When branch select changes: updates local selectedBranch and immediately triggers onBranchChange
   const handleBranchChange = (newBranchStr: string) => {
     const newBranchId = Number(newBranchStr) || 1
     setSelectedBranch(newBranchId)
+    if (onBranchChange) {
+      onBranchChange(newBranchId)
+    }
   }
 
   // When clicking "Обновить": triggers onDateChange, onBranchChange and refreshes queries

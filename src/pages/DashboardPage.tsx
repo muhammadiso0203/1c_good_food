@@ -4,10 +4,8 @@ import { FiliallarSavdosi } from "../components/FiliallarSavdosi"
 import { SavdoDinamikasi } from "../components/SavdoDinamikasi"
 import { OstatkiTovara } from "../components/OstatkiTovara"
 import { TopTovari } from "../components/TopTovari"
-import { StatusOstatkov } from "../components/StatusOstatkov"
 import { DengiNaSchetax } from "../components/DengiNaSchetax"
 import { DebitorskayaZadoljennost } from "../components/DebitorskayaZadoljennost"
-import { TrebuyetVnimaniya } from "../components/TrebuyetVnimaniya"
 import { CreditorskayaZadoljennost } from "../components/creditorskaya"
 
 interface DashboardPageProps {
@@ -20,31 +18,19 @@ export function DashboardPage({ date, branch = 1 }: DashboardPageProps) {
     <div className="w-full flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
       <StatsCards date={date} branch={branch} />
 
-      {/* Upper Main Dashboard Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 2xl:gap-5 3xl:gap-6 mt-1 sm:mt-2">
-        {/* Left Block (3/4 Width on Desktop) */}
-        <div className="col-span-1 xl:col-span-3 flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
-          {/* Top Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 2xl:gap-5 3xl:gap-6">
-            <FiliallarSavdosi date={date} branch={branch} />
-            <SavdoDinamikasi date={date} branch={branch} />
-          </div>
-
-          {/* Middle Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-5 3xl:gap-6">
-            <OstatkiTovara date={date} branch={branch} />
-            <TopTovari date={date} branch={branch} />
-            <StatusOstatkov date={date} branch={branch} />
-          </div>
-        </div>
-
-        {/* Right Column (1/4 Width on Desktop) */}
-        <div className="col-span-1 xl:col-span-1 flex flex-col gap-4 2xl:gap-5 3xl:gap-6">
-          <TrebuyetVnimaniya />
-        </div>
+      {/* Top Row: Sales by Branches & Sales Dynamics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 2xl:gap-5 3xl:gap-6 mt-1 sm:mt-2">
+        <FiliallarSavdosi date={date} branch={branch} />
+        <SavdoDinamikasi date={date} branch={branch} />
       </div>
 
-      {/* Bottom Row */}
+      {/* Middle Row: Goods Remaining & Top Products */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 2xl:gap-5 3xl:gap-6">
+        <OstatkiTovara date={date} branch={branch} />
+        <TopTovari date={date} branch={branch} />
+      </div>
+
+      {/* Bottom Row: Cash/Bank Accounts & Debtor/Creditor Debt */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-5 3xl:gap-6">
         <DengiNaSchetax date={date} branch={branch} />
         <DebitorskayaZadoljennost date={date} branch={branch} />

@@ -9,11 +9,33 @@ interface AccountData {
   kassa: number
 }
 
-const REGIONS = [
-  { key: "Джизакская_область", name: "Джизак" },
-  { key: "Сырдарьинская_область", name: "Гулистан" },
-  { key: "Ташкентская_область", name: "Ташкент" },
+interface RegionConfig {
+  id: number
+  aliases: string[]
+  name: string
+}
+
+const REGIONS: RegionConfig[] = [
+  { id: 2, name: "Ташкент", aliases: ["ташкент", "тошкент", "tashkent", "toshkent", "2"] },
+  { id: 3, name: "Гулистан", aliases: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "sirdaryo", "3"] },
+  { id: 4, name: "Джизак", aliases: ["джизак", "жиззах", "jizzax", "dzhizak", "4"] },
 ]
+
+function parseNum(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  const str = String(val).replace(/\s/g, "").replace(",", ".")
+  const parsed = parseFloat(str)
+  return isNaN(parsed) ? 0 : parsed
+}
+
+function matchesBranch(idOrName: unknown, reg: RegionConfig): boolean {
+  if (idOrName === undefined || idOrName === null) return false
+  const num = Number(idOrName)
+  if (!isNaN(num) && num === reg.id) return true
+  const s = String(idOrName).toLowerCase().trim()
+  return reg.aliases.some((alias) => s.includes(alias))
+}
 
 function DengiSkeleton() {
   return (
@@ -83,32 +105,66 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
   const { data: apiData, isLoading } = useData(date, branch)
 
   const data: AccountData[] = useMemo(() => {
-    return REGIONS.map((reg) => {
+    const activeRegions = branch && branch !== 1
+      ? REGIONS.filter((r) => r.id === branch)
+      : REGIONS
+
+    if (!apiData || typeof apiData !== "object") {
+      return activeRegions.map((r) => ({ filial: r.name, schet: 0, kassa: 0 }))
+    }
+
+    // Collect array data if present (e.g. ДеньгиНаСчетахПоРегионам / ДеньгиВКассахПоРегионам)
+    const schetArray: unknown[] = []
+    const kassaArray: unknown[] = []
+
+    for (const [k, v] of Object.entries(apiData)) {
+      const kLower = k.toLowerCase()
+      if (Array.isArray(v)) {
+        if (kLower.includes("счет") || kLower.includes("счёт") || kLower.includes("расч")) {
+          schetArray.push(...v)
+        } else if (kLower.includes("касс")) {
+          kassaArray.push(...v)
+        }
+      }
+    }
+
+    return activeRegions.map((reg) => {
       let schet = 0
       let kassa = 0
 
-      if (apiData) {
-        for (const [key, rawVal] of Object.entries(apiData)) {
-          const kLower = key.toLowerCase()
-          const regKeyLower = reg.key.toLowerCase()
-          const regNameLower = reg.name.toLowerCase()
-          const val =
-            typeof rawVal === "number"
-              ? rawVal
-              : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
+      // 1. Check in schetArray
+      for (const item of schetArray) {
+        if (item && typeof item === "object") {
+          const row = item as Record<string, unknown>
+          const branchIdOrName = row.ID ?? row.id ?? row.Филиал ?? row.Регион ?? row.Branch ?? row.name
+          if (matchesBranch(branchIdOrName, reg)) {
+            const val = parseNum(row.Сумма ?? row.summa ?? row.Summa ?? row.amount ?? row.value ?? row.Счет ?? row.schet)
+            if (val > 0) schet = val
+          }
+        }
+      }
 
-          const matchesRegion =
-            kLower.includes(regKeyLower) ||
-            kLower.includes(regNameLower) ||
-            (reg.name === "Гулистан" && (kLower.includes("сырдар") || kLower.includes("гулис"))) ||
-            (reg.name === "Джизак" && (kLower.includes("джизак") || kLower.includes("жиззах")))
+      // 2. Check in kassaArray
+      for (const item of kassaArray) {
+        if (item && typeof item === "object") {
+          const row = item as Record<string, unknown>
+          const branchIdOrName = row.ID ?? row.id ?? row.Филиал ?? row.Регион ?? row.Branch ?? row.name
+          if (matchesBranch(branchIdOrName, reg)) {
+            const val = parseNum(row.Сумма ?? row.summa ?? row.Summa ?? row.amount ?? row.value ?? row.Касса ?? row.kassa)
+            if (val > 0) kassa = val
+          }
+        }
+      }
 
-          if (matchesRegion) {
-            if (kLower.includes("расч") || kLower.includes("счет") || kLower.includes("счёт")) {
-              schet = val
-            } else if (kLower.includes("касс")) {
-              kassa = val
-            }
+      // 3. Fallback: check in flat object keys
+      for (const [key, rawVal] of Object.entries(apiData)) {
+        const kLower = key.toLowerCase()
+        if (matchesBranch(kLower, reg)) {
+          const val = parseNum(rawVal)
+          if (kLower.includes("расч") || kLower.includes("счет") || kLower.includes("счёт")) {
+            if (schet === 0 && val > 0) schet = val
+          } else if (kLower.includes("касс")) {
+            if (kassa === 0 && val > 0) kassa = val
           }
         }
       }
@@ -119,7 +175,7 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
         kassa,
       }
     })
-  }, [apiData])
+  }, [apiData, branch])
 
   const totalSchet = useMemo(() => data.reduce((sum, item) => sum + item.schet, 0), [data])
   const totalKassa = useMemo(() => data.reduce((sum, item) => sum + item.kassa, 0), [data])

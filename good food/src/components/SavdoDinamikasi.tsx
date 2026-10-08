@@ -24,6 +24,30 @@ const MONTHS = [
   { name: "Дек", full: "Декабрь", defCurr: undefined, defPrev: 0 },
 ]
 
+function normalizeValue(raw: unknown): number | undefined {
+  if (raw === undefined || raw === null || raw === "") return undefined
+  let num = 0
+  if (typeof raw === "number") {
+    num = raw
+  } else {
+    const cleaned = String(raw).replace(/\s/g, "").replace(",", ".")
+    num = parseFloat(cleaned)
+    if (isNaN(num)) return undefined
+  }
+  if (num <= 0) return 0
+
+  if (num >= 100_000_000) {
+    return Number((num / 1_000_000_000).toFixed(2))
+  }
+  if (num >= 100_000) {
+    return Number((num / 1_000_000).toFixed(2))
+  }
+  if (num > 100) {
+    return Number((num / 1000).toFixed(2))
+  }
+  return Number(num.toFixed(2))
+}
+
 export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 600, height: 175 })
@@ -32,40 +56,61 @@ export function SavdoDinamikasi({ date, branch }: { date?: DateRange; branch?: n
 
   const { data: apiData, isLoading } = useData(date, branch)
 
-
   const data: ChartDataPoint[] = useMemo(() => {
-    return MONTHS.map((m, i) => {
-      const idx = i + 1
-      let currRaw: number | undefined
-      let prevRaw: number | undefined
+    let hasMatchedAny = false
 
-      if (apiData) {
-        for (const k in apiData) {
-          if (k.startsWith(`ДинамикаПродаж_${idx}_`)) {
-            const raw = apiData[k]
-            currRaw = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
-          } else if (
-            k.startsWith(`ДинамикаПродажПредыдущий_${idx}_`) ||
-            k.startsWith(`ДинамикаПродажПредудущий_${idx}_`)
-          ) {
-            const raw = apiData[k]
-            prevRaw = typeof raw === "number" ? raw : parseFloat(String(raw).replace(/\s/g, "").replace(",", ".")) || 0
+    const items = MONTHS.map((m, i) => {
+      const idx = i + 1
+      const idxPadded = idx < 10 ? `0${idx}` : `${idx}`
+      const mNameLower = m.name.toLowerCase()
+      const mFullLower = m.full.toLowerCase()
+
+      let currRaw: unknown
+      let prevRaw: unknown
+
+      if (apiData && typeof apiData === "object") {
+        for (const [key, raw] of Object.entries(apiData)) {
+          const kLower = key.toLowerCase()
+          if (!kLower.includes("динамик")) continue
+
+          const isPrev =
+            kLower.includes("пред") ||
+            kLower.includes("прошл") ||
+            kLower.includes("prev") ||
+            kLower.includes("last")
+
+          const matchesMonth =
+            kLower.includes(`_${idx}_`) ||
+            kLower.includes(`_${idxPadded}_`) ||
+            kLower.endsWith(`_${idx}`) ||
+            kLower.endsWith(`_${idxPadded}`) ||
+            kLower.includes(`_${mNameLower}_`) ||
+            kLower.includes(`_${mFullLower}_`) ||
+            kLower.includes(mFullLower)
+
+          if (matchesMonth) {
+            if (isPrev) {
+              prevRaw = raw
+              hasMatchedAny = true
+            } else {
+              currRaw = raw
+              hasMatchedAny = true
+            }
           }
         }
       }
 
-      const parseVal = (val: number | undefined) => {
-        if (!apiData) return undefined
-        if (val === undefined) return 0
-        return val > 0 ? Number((val > 100 ? val / 1000 : val).toFixed(2)) : 0
-      }
+      const currVal = normalizeValue(currRaw)
+      const prevVal = normalizeValue(prevRaw)
 
       return {
         month: m.name,
-        currentYear: apiData ? parseVal(currRaw) : m.defCurr,
-        prevYear: apiData ? (parseVal(prevRaw) ?? 0) : m.defPrev,
+        currentYear: hasMatchedAny ? currVal : m.defCurr,
+        prevYear: hasMatchedAny ? (prevVal ?? 0) : m.defPrev,
       }
     })
+
+    return items
   }, [apiData])
 
   useEffect(() => {

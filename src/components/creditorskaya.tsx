@@ -101,7 +101,7 @@ function CreditorskayaSkeleton() {
 }
 
 export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) {
-  const { data: apiData, isLoading } = useData(date, branch)
+  const { data: apiData, isLongLoading, isLoading } = useData(date, branch)
 
   const formatSuma = (val: number) => {
     return Math.round(val)
@@ -176,7 +176,7 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
     }
   }, [apiData])
 
-  if (isLoading && !apiData) {
+  if ((isLongLoading || isLoading) && !apiData) {
     return <CreditorskayaSkeleton />
   }
 

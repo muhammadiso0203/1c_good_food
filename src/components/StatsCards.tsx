@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import {
   ShoppingCart,
   BarChart3,
@@ -84,6 +85,23 @@ const SkeletonCard = () => {
 export function StatsCards({ date, branch }: { date?: DateRange; branch?: number }) {
   const { data, isLoading } = useData(date, branch)
 
+  const prosrochennayaDebitorka = useMemo(() => {
+    if (!data) return undefined
+    if (typeof data.ПросроченнаяДебиторка === "number") return data.ПросроченнаяДебиторка
+    const d15 = Number(data.ПросроченнаяДебиторка_15) || 0
+    const d15_30 = Number(data.ПросроченнаяДебиторка_15_30) || 0
+    const d30_60 = Number(data.ПросроченнаяДебиторка_30_60) || 0
+    const d60_90 = Number(data.ПросроченнаяДебиторка_60_90) || 0
+    const d90 = Number(data.ПросроченнаяДебиторка_90) || 0
+    const sum = d15 + d15_30 + d30_60 + d60_90 + d90
+    if (sum > 0) return sum
+    if (typeof data.ПросроченнаяДебиторка_Итого === "number" && data.ПросроченнаяДебиторка_Итого > 0) {
+      return data.ПросроченнаяДебиторка_Итого > 100_000
+        ? data.ПросроченнаяДебиторка_Итого
+        : data.ПросроченнаяДебиторка_Итого * 1_000_000
+    }
+    return 0
+  }, [data])
 
   const defaultStats: StatCardProps[] = [
     {
@@ -152,7 +170,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     },
     {
       title: "ПРОСРОЧЕННАЯ ДЕБИТОРКА",
-      value: formatNumber(data?.ПросроченнаяДебиторка),
+      value: formatNumber(prosrochennayaDebitorka),
       unit: "сум",
       trend: formatTrend(data?.ПросроченнаяДебиторкаИзменение, "за период"),
       icon: Clock,
