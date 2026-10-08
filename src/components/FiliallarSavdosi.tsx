@@ -26,7 +26,7 @@ const TARGET_BRANCHES: BranchConfig[] = [
   {
     id: 3,
     nomi: "Гулистон",
-    aliases: ["3", "гулистон", "гулистан", "сырдар", "сурдар", "guliston", "gulistan"],
+    aliases: ["3", "гулистон", "гулистан", "сырдар", "сурдар", "guliston", "gulistan", "sirdaryo", "сирдарё", "сирдарья"],
   },
   {
     id: 2,
@@ -123,8 +123,9 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
         const kLower = key.toLowerCase()
         if (
           Array.isArray(val) &&
-          kLower.includes("продаж") &&
-          (kLower.includes("филиал") || kLower.includes("регион")) &&
+          (kLower.includes("продажи_по_филиалам") ||
+            kLower.includes("продажипофилиалам") ||
+            (kLower.includes("продаж") && (kLower.includes("филиал") || kLower.includes("регион")))) &&
           !kLower.includes("топ") &&
           !kLower.includes("динамик") &&
           !kLower.includes("деньги") &&
@@ -143,10 +144,10 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
       for (const item of salesArray) {
         if (!item || typeof item !== "object") continue
         const row = item as Record<string, unknown>
-        const idNum = Number(row.ID ?? row.id)
-        const name = String(row.Филиал ?? row.Регион ?? row.Name ?? row.name ?? row.filial ?? "").trim()
-        
-        // Skip total summary row ID 1 / "Все филиалы" when listing branches
+        const idNum = Number(row.ID ?? row.id ?? row.BranchID ?? row.branchId)
+        const name = String(row.Филиал ?? row.Регион ?? row.Name ?? row.name ?? row.filial ?? row.Nomi ?? row.nomi ?? "").trim()
+
+        // Skip total summary row ID 1 / "Все филиалы" when listing individual branches
         const isTotalRow = idNum === 1 || name.toLowerCase().includes("все филиал") || name.toLowerCase().includes("итого")
 
         if (branch && branch !== 1) {
@@ -166,8 +167,8 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
           bajarilish = Math.round((oy / reja) * 100)
         }
 
-        const known = TARGET_BRANCHES.find((b) => (idNum && b.id === idNum) || matchesBranch(name, b))
-        const displayName = known?.nomi || name || `Филиал ${idNum || result.length + 1}`
+        const known = TARGET_BRANCHES.find((b) => (idNum && b.id === idNum) || (name && matchesBranch(name, b)))
+        const displayName = known?.nomi || name || (idNum ? `Филиал ${idNum}` : `Филиал ${result.length + 1}`)
 
         result.push({
           id: String(idNum || known?.id || result.length + 1),
@@ -180,7 +181,7 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
       }
     }
 
-    // 2. Check flat format fallback if not found in array
+    // 2. Check flat format fallback ONLY if not found in array
     if (result.length === 0 && apiData && typeof apiData === "object") {
       const activeTargets = branch && branch !== 1
         ? TARGET_BRANCHES.filter((b) => b.id === branch)
@@ -196,7 +197,10 @@ export function FiliallarSavdosi({ date, branch }: FiliallarSavdosiProps) {
         for (const [key, val] of Object.entries(apiData)) {
           const kLower = key.toLowerCase()
           if (
-            (kLower.startsWith("продажипофилиалам_") || kLower.startsWith("продажипорегионам_")) &&
+            (kLower.startsWith("продажипофилиалам_") ||
+              kLower.startsWith("продажи_по_филиалам_") ||
+              kLower.startsWith("продажипорегионам_") ||
+              kLower.startsWith("продажи_по_регионам_")) &&
             matchesBranch(kLower, b)
           ) {
             if (typeof val === "string") {

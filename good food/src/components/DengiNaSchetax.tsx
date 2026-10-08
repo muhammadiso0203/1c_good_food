@@ -169,6 +169,16 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
         }
       }
 
+      // 4. Branch-specific top-level fallback
+      if (branch && branch !== 1 && reg.id === branch) {
+        if (schet === 0 && apiData?.ДеньгиНаСчетах) {
+          schet = parseNum(apiData.ДеньгиНаСчетах)
+        }
+        if (kassa === 0 && apiData?.ДеньгиВКассах) {
+          kassa = parseNum(apiData.ДеньгиВКассах)
+        }
+      }
+
       return {
         filial: reg.name,
         schet,

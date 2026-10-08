@@ -92,8 +92,8 @@ export const useData = (dateRange?: DateRange, branch: number = 1) => {
     const mergedData = useMemo(() => {
         if (!mainpageQuery.data && !longQuery.data) return undefined
         return {
-            ...(mainpageQuery.data || {}),
             ...(longQuery.data || {}),
+            ...(mainpageQuery.data || {}),
         } as StatsCard
     }, [mainpageQuery.data, longQuery.data])
 
@@ -112,5 +112,3 @@ export const useData = (dateRange?: DateRange, branch: number = 1) => {
 }
 
 export { useIlliquidProducts } from "./useIlliquidProducts"
-
-

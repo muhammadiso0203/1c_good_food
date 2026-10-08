@@ -5,11 +5,10 @@ import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
 
 interface DebitorItem {
-  period: string
+  name: string
   summa: number
   foiz: number
   color: string
-  bgKlass: string
 }
 
 interface DebitorskayaProps {
@@ -17,7 +16,26 @@ interface DebitorskayaProps {
   branch?: number
 }
 
-function parseNumeric(val: StatsCard[string]): number {
+const PALETTE = [
+  "#22c55e",
+  "#3b82f6",
+  "#eab308",
+  "#ec4899",
+  "#a855f7",
+  "#06b6d4",
+  "#f97316",
+  "#14b8a6",
+  "#8b5cf6",
+  "#ef4444",
+]
+
+const BRANCH_ALIASES: Record<number, string[]> = {
+  2: ["ташкент", "тошкент", "tashkent", "toshkent"],
+  3: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "sirdaryo"],
+  4: ["джизак", "жиззах", "jizzax", "dzhizak"],
+}
+
+function parseNumeric(val: unknown): number {
   if (val === undefined || val === null) return 0
   if (typeof val === "number") return isNaN(val) ? 0 : val
   if (typeof val === "string") {
@@ -36,7 +54,7 @@ function getDebitorVal(
 
   for (const [key, value] of Object.entries(apiData)) {
     const k = key.toLowerCase().trim()
-    if (!k.includes("дебитор")) continue
+    if (!k.includes("деб")) continue
 
     if (type === "15" && /(?:_|\b)15$/.test(k) && !k.includes("15_30")) {
       return parseNumeric(value)
@@ -110,6 +128,86 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
   }
 
   const { items, totalSumma, chartData } = useMemo(() => {
+    if (!apiData || typeof apiData !== "object") {
+      return {
+        items: [],
+        totalSumma: 0,
+        chartData: [{ name: "Нет данных", summa: 1, foiz: 0, color: "#3f3f46" }],
+      }
+    }
+
+    // 1. Check for brand-based debtor array: "Дебеторсы_ПоБрэндам", "Дебиторы_ПоБрэндам", etc.
+    let brandArray: unknown[] | null = null
+    for (const [key, val] of Object.entries(apiData)) {
+      const kLower = key.toLowerCase()
+      if (kLower.includes("деб") && Array.isArray(val) && val.length > 0) {
+        brandArray = val
+        break
+      }
+    }
+
+    if (brandArray && brandArray.length > 0) {
+      // If a specific branch is selected, check if items contain branch name/suffix
+      let targetItems = brandArray
+      if (branch && branch !== 1 && BRANCH_ALIASES[branch]) {
+        const aliases = BRANCH_ALIASES[branch]
+        const matched = brandArray.filter((item) => {
+          if (!item || typeof item !== "object") return false
+          const row = item as Record<string, unknown>
+          const name = String(row.Категория ?? row.Брэнд ?? row.Бренд ?? row.Наименование ?? "").toLowerCase()
+          return aliases.some((a) => name.includes(a))
+        })
+        if (matched.length > 0) {
+          targetItems = matched
+        }
+      }
+
+      let rawTotal = 0
+      const brandItems: DebitorItem[] = []
+
+      targetItems.forEach((item, idx) => {
+        if (!item || typeof item !== "object") return
+        const row = item as Record<string, unknown>
+        const name = String(
+          row.Категория ??
+          row.Брэнд ??
+          row.Бренд ??
+          row.Наименование ??
+          row.name ??
+          row.brand ??
+          row.category ??
+          `Бренд ${idx + 1}`
+        ).trim()
+        const summa = parseNumeric(row.Сумма ?? row.summa ?? row.amount ?? row.value)
+        rawTotal += summa
+        brandItems.push({
+          name,
+          summa,
+          foiz: 0,
+          color: PALETTE[idx % PALETTE.length],
+        })
+      })
+
+      if (rawTotal === 0 && (apiData.ДебиторскаяЗадолженность || apiData.ДебеторскаяЗадолженность)) {
+        rawTotal = parseNumeric(apiData.ДебиторскаяЗадолженность ?? apiData.ДебеторскаяЗадолженность)
+      }
+
+      const calculatedItems = brandItems.map((item) => ({
+        ...item,
+        foiz: rawTotal > 0 ? Math.round((item.summa / rawTotal) * 100) : 0,
+      }))
+
+      const validChartItems = calculatedItems.filter((it) => it.summa > 0)
+      const fallbackChart = [{ name: "Нет данных", summa: 1, foiz: 0, color: "#3f3f46" }]
+
+      return {
+        items: calculatedItems,
+        totalSumma: rawTotal,
+        chartData: validChartItems.length > 0 ? validChartItems : fallbackChart,
+      }
+    }
+
+    // 2. Fallback to period-based debtors
     const do15 = getDebitorVal(apiData, "15")
     const ot15do30 = getDebitorVal(apiData, "15_30")
     const ot30do60 = getDebitorVal(apiData, "30_60")
@@ -123,33 +221,31 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
       const itogo = getDebitorVal(apiData, "itogo")
       if (itogo > 0) {
         rawTotal = itogo > 100_000 ? itogo : itogo * 1_000_000
+      } else if (apiData.ДебиторскаяЗадолженность || apiData.ДебеторскаяЗадолженность) {
+        rawTotal = parseNumeric(apiData.ДебиторскаяЗадолженность ?? apiData.ДебеторскаяЗадолженность)
       }
     }
 
     const rawItems = [
       {
-        period: "До 30 дней",
+        name: "До 30 дней",
         summa: do30,
         color: "#22c55e",
-        bgKlass: "bg-emerald-500",
       },
       {
-        period: "30 - 60 дней",
+        name: "30 - 60 дней",
         summa: ot30do60,
         color: "#eab308",
-        bgKlass: "bg-yellow-500",
       },
       {
-        period: "60 - 90 дней",
+        name: "60 - 90 дней",
         summa: ot60do90,
         color: "#f97316",
-        bgKlass: "bg-orange-500",
       },
       {
-        period: "Более 90 дней",
+        name: "Более 90 дней",
         summa: bolee90,
         color: "#ef4444",
-        bgKlass: "bg-red-500",
       },
     ]
 
@@ -161,11 +257,10 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
     const validChartItems = calculatedItems.filter((item) => item.summa > 0)
     const fallbackChart = [
       {
-        period: "Нет данных",
+        name: "Нет данных",
         summa: 1,
         foiz: 0,
         color: "#3f3f46",
-        bgKlass: "bg-zinc-700",
       },
     ]
 
@@ -174,7 +269,7 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
       totalSumma: rawTotal,
       chartData: validChartItems.length > 0 ? validChartItems : fallbackChart,
     }
-  }, [apiData])
+  }, [apiData, branch])
 
   if ((isLongLoading || isLoading) && !apiData) {
     return <DebitorskayaSkeleton />
@@ -186,12 +281,19 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })
-      : (totalSumma / 1_000_000).toLocaleString("ru-RU", {
+      : totalSumma >= 1_000_000
+      ? (totalSumma / 1_000_000).toLocaleString("ru-RU", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })
+      : totalSumma.toLocaleString("ru-RU")
 
-  const unit = totalSumma >= 1_000_000_000 ? "млрд сум" : "млн сум"
+  const unit =
+    totalSumma >= 1_000_000_000
+      ? "млрд сум"
+      : totalSumma >= 1_000_000
+      ? "млн сум"
+      : "сум"
 
   return (
     <div className="w-full h-full">
@@ -255,21 +357,22 @@ export function DebitorskayaZadoljennost({ date, branch }: DebitorskayaProps) {
           </div>
 
           {/* Right Side: Data Legend */}
-          <div className="w-full flex-1 flex flex-col justify-center gap-3">
+          <div className="w-full flex-1 flex flex-col justify-center gap-2.5 max-h-48 overflow-y-auto pr-1">
             {items.map((item, idx) => (
               <div key={idx} className="flex items-start gap-2.5">
                 {/* Color Box */}
                 <span
-                  className={`w-3 h-3 rounded-xs shrink-0 mt-0.5 ${item.bgKlass}`}
+                  className="w-3 h-3 rounded-xs shrink-0 mt-0.5"
+                  style={{ backgroundColor: item.color }}
                 />
 
                 {/* Info */}
-                <div className="flex flex-col leading-tight">
-                  <span className="text-zinc-300 text-xs font-normal">
-                    {item.period}
+                <div className="flex flex-col leading-tight min-w-0">
+                  <span className="text-zinc-300 text-xs font-normal truncate" title={item.name}>
+                    {item.name}
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-zinc-100 text-xs font-semibold">
+                    <span className="text-zinc-100 text-xs font-semibold font-mono">
                       {formatSuma(item.summa)}
                     </span>
                     <span className="text-zinc-400 text-xs font-normal">

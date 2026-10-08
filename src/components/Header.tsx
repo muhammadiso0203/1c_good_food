@@ -106,7 +106,7 @@ export function Header({
     setIsOpen(open)
   }
 
-  // When clicking OK in popover: only updates local selectedDate, does NOT trigger API calls yet
+  // When clicking OK in popover: updates local selectedDate and triggers onDateChange
   const handleApply = () => {
     if (tempStartDate) {
       const finalRange: DateRange = {
@@ -114,6 +114,9 @@ export function Header({
         to: tempEndDate || tempStartDate,
       }
       setSelectedDate(finalRange)
+      if (onDateChange) {
+        onDateChange(finalRange)
+      }
     }
     setIsOpen(false)
   }

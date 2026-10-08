@@ -2,7 +2,6 @@ import { useMemo } from "react"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
-import { Loader2 } from "lucide-react"
 
 interface ProductSaleItem {
   name: string
@@ -14,14 +13,78 @@ interface TopTovariProps {
   branch?: number
 }
 
+function parseNumeric(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  if (typeof val === "string") {
+    const cleaned = val.replace(/\s/g, "").replace(",", ".")
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  return 0
+}
+
+function TopTovariSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="min-h-65 h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-4 select-none flex flex-col justify-between animate-pulse">
+        {/* Header Skeleton */}
+        <div className="pb-2">
+          <div className="h-2.5 w-48 bg-zinc-700/60 rounded" />
+        </div>
+
+        {/* Labels for columns */}
+        <div className="grid grid-cols-12 gap-3 mb-2 border-b border-zinc-800/30 pb-1.5">
+          <div className="col-span-4 h-2 w-12 bg-zinc-700/40 rounded" />
+          <div className="col-span-5 h-2 w-16 bg-zinc-700/40 rounded" />
+          <div className="col-span-3 flex justify-end">
+            <div className="h-2 w-14 bg-zinc-700/40 rounded" />
+          </div>
+        </div>
+
+        {/* List skeleton */}
+        <div className="flex flex-col gap-1.5 overflow-hidden">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div
+              key={i}
+              className="grid grid-cols-12 gap-3 items-center rounded-md bg-zinc-800/20 py-1 px-1"
+            >
+              <div className="col-span-4 flex items-center gap-1.5 min-w-0">
+                <span className="text-zinc-600 text-[9px] w-3.5">{i}</span>
+                <div className="h-2 w-24 bg-zinc-700/50 rounded" />
+              </div>
+              <div className="col-span-5 h-2 bg-blue-900/30 rounded" style={{ width: `${Math.max(20, 100 - i * 11)}%` }} />
+              <div className="col-span-3 flex justify-end">
+                <div className="h-2 w-14 bg-zinc-700/60 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function TopTovari({ date, branch }: TopTovariProps) {
-
-  const { data: apiData, isLoading } = useData(date, branch)
-
+  const { data: apiData, isLongLoading, isLoading } = useData(date, branch)
 
   const data: ProductSaleItem[] = useMemo(() => {
     if (!apiData) return []
 
+    // 1. Check array format
+    for (const [key, val] of Object.entries(apiData)) {
+      const kLower = key.toLowerCase()
+      if ((kLower.includes("топ10") || kLower.includes("топ_10") || kLower.includes("топтоваров")) && Array.isArray(val) && val.length > 0) {
+        return val.map((row) => {
+          const r = row as Record<string, unknown>
+          const name = String(r.Товар ?? r.Наименование ?? r.Номенклатура ?? r.name ?? r.product ?? "").trim()
+          const value = parseNumeric(r.Сумма ?? r.summa ?? r.Продажи ?? r.amount ?? r.value)
+          return { name, value }
+        }).filter((it) => it.name && it.value > 0)
+      }
+    }
+
+    // 2. Check flat keys format
     const extracted: { rank: number; name: string; value: number }[] = []
 
     for (const key in apiData) {
@@ -29,7 +92,6 @@ export function TopTovari({ date, branch }: TopTovariProps) {
       if (match) {
         const rank = parseInt(match[1], 10)
         const rawName = match[2]
-        // Clean up underscores and extra spaces from dynamic backend keys
         const name = rawName
           .replace(/^_+/, "")
           .replace(/_+$/, "")
@@ -38,7 +100,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
           .replace(/\s+/g, " ")
           .trim()
         const rawVal = (apiData as Record<string, unknown>)[key]
-        const value = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
+        const value = parseNumeric(rawVal)
         extracted.push({ rank, name, value })
       }
     }
@@ -47,27 +109,22 @@ export function TopTovari({ date, branch }: TopTovariProps) {
     return extracted.map((item) => ({ name: item.name, value: item.value }))
   }, [apiData])
 
-
-  const formatSuma = (val: number) => {
-    return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-  }
-
   const maxValue = useMemo(() => {
     if (data.length === 0) return 1
     return Math.max(...data.map((item) => item.value))
   }, [data])
 
+  if ((isLongLoading || isLoading) && data.length === 0) {
+    return <TopTovariSkeleton />
+  }
+
+  const formatSuma = (val: number) => {
+    return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  }
+
   return (
     <div className="w-full h-full">
-      <div className="relative min-h-[260px] h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-4 select-none flex flex-col justify-between">
-        {/* Loading Overlay */}
-        {isLoading && !apiData && (
-          <div className="absolute inset-0 z-20 bg-gray-900/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center flex-col gap-2 transition-all duration-200">
-            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-            <span className="text-xs font-medium text-zinc-300">Загрузка данных...</span>
-          </div>
-        )}
-
+      <div className="relative min-h-65 h-full bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-4 select-none flex flex-col justify-between">
         {/* Header Title */}
         <div className="pb-2">
           <h2 className="text-[9px] font-semibold text-zinc-400 uppercase">

@@ -3,14 +3,12 @@ import { useMemo } from "react"
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import type { DateRange } from "react-day-picker"
 import { useData } from "../pages/service/useData"
-import { Loader2 } from "lucide-react"
 
 interface CreditorItem {
-  period: string
+  name: string
   summa: number
   foiz: number
   color: string
-  bgKlass: string
 }
 
 interface CreditorskayaProps {
@@ -18,7 +16,26 @@ interface CreditorskayaProps {
   branch?: number
 }
 
-function parseNumeric(val: StatsCard[string]): number {
+const PALETTE = [
+  "#f97316",
+  "#eab308",
+  "#3b82f6",
+  "#a855f7",
+  "#22c55e",
+  "#ec4899",
+  "#06b6d4",
+  "#14b8a6",
+  "#ef4444",
+  "#8b5cf6",
+]
+
+const BRANCH_ALIASES: Record<number, string[]> = {
+  2: ["ташкент", "тошкент", "tashkent", "toshkent"],
+  3: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "sirdaryo"],
+  4: ["джизак", "жиззах", "jizzax", "dzhizak"],
+}
+
+function parseNumeric(val: unknown): number {
   if (val === undefined || val === null) return 0
   if (typeof val === "number") return isNaN(val) ? 0 : val
   if (typeof val === "string") {
@@ -37,7 +54,7 @@ function getCreditorVal(
 
   for (const [key, value] of Object.entries(apiData)) {
     const k = key.toLowerCase().trim()
-    if (!k.includes("кредитор")) continue
+    if (!k.includes("кред")) continue
 
     if (type === "15" && /(?:_|\b)15$/.test(k) && !k.includes("15_30")) {
       return parseNumeric(value)
@@ -61,8 +78,48 @@ function getCreditorVal(
   return 0
 }
 
+function CreditorskayaSkeleton() {
+  return (
+    <div className="w-full h-full">
+      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full animate-pulse">
+        {/* Header Skeleton */}
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
+          <div className="h-3 w-48 bg-zinc-700/60 rounded" />
+        </div>
+
+        {/* Content Layout Skeleton */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 min-h-44 flex-1">
+          {/* Left Side: Doughnut Skeleton + Button */}
+          <div className="flex flex-col items-center shrink-0">
+            <div className="w-32 h-32 rounded-full border-8 border-zinc-700/50 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="h-4 w-12 bg-zinc-700/70 rounded" />
+                <div className="h-2 w-10 bg-zinc-700/40 rounded" />
+              </div>
+            </div>
+            <div className="mt-3 h-7 w-24 bg-zinc-700/60 rounded-lg" />
+          </div>
+
+          {/* Right Side: Rows Skeleton */}
+          <div className="w-full flex-1 flex flex-col justify-center gap-3.5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <div className="w-3 h-3 rounded-xs bg-zinc-700/60 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <div className="h-2.5 w-24 bg-zinc-700/60 rounded" />
+                  <div className="h-2 w-32 bg-zinc-700/40 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) {
-  const { data: apiData, isLoading } = useData(date, branch)
+  const { data: apiData, isLongLoading, isLoading } = useData(date, branch)
 
   const formatSuma = (val: number) => {
     return Math.round(val)
@@ -71,6 +128,86 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
   }
 
   const { items, totalSumma, chartData } = useMemo(() => {
+    if (!apiData || typeof apiData !== "object") {
+      return {
+        items: [],
+        totalSumma: 0,
+        chartData: [{ name: "Нет данных", summa: 1, foiz: 0, color: "#3f3f46" }],
+      }
+    }
+
+    // 1. Check for brand-based creditor array: "Кредеторы_ПоБрэндам", "Кредиторы_ПоБрэндам", etc.
+    let brandArray: unknown[] | null = null
+    for (const [key, val] of Object.entries(apiData)) {
+      const kLower = key.toLowerCase()
+      if (kLower.includes("кред") && Array.isArray(val) && val.length > 0) {
+        brandArray = val
+        break
+      }
+    }
+
+    if (brandArray && brandArray.length > 0) {
+      // If a specific branch is selected, check if items contain branch name/suffix
+      let targetItems = brandArray
+      if (branch && branch !== 1 && BRANCH_ALIASES[branch]) {
+        const aliases = BRANCH_ALIASES[branch]
+        const matched = brandArray.filter((item) => {
+          if (!item || typeof item !== "object") return false
+          const row = item as Record<string, unknown>
+          const name = String(row.Категория ?? row.Брэнд ?? row.Бренд ?? row.Наименование ?? "").toLowerCase()
+          return aliases.some((a) => name.includes(a))
+        })
+        if (matched.length > 0) {
+          targetItems = matched
+        }
+      }
+
+      let rawTotal = 0
+      const brandItems: CreditorItem[] = []
+
+      targetItems.forEach((item, idx) => {
+        if (!item || typeof item !== "object") return
+        const row = item as Record<string, unknown>
+        const name = String(
+          row.Категория ??
+          row.Брэнд ??
+          row.Бренд ??
+          row.Наименование ??
+          row.name ??
+          row.brand ??
+          row.category ??
+          `Бренд ${idx + 1}`
+        ).trim()
+        const summa = parseNumeric(row.Сумма ?? row.summa ?? row.amount ?? row.value)
+        rawTotal += summa
+        brandItems.push({
+          name,
+          summa,
+          foiz: 0,
+          color: PALETTE[idx % PALETTE.length],
+        })
+      })
+
+      if (rawTotal === 0 && (apiData.КредиторскаяЗадолженность || apiData.КредеторскаяЗадолженность)) {
+        rawTotal = parseNumeric(apiData.КредиторскаяЗадолженность ?? apiData.КредеторскаяЗадолженность)
+      }
+
+      const calculatedItems = brandItems.map((item) => ({
+        ...item,
+        foiz: rawTotal > 0 ? Math.round((item.summa / rawTotal) * 100) : 0,
+      }))
+
+      const validChartItems = calculatedItems.filter((it) => it.summa > 0)
+      const fallbackChart = [{ name: "Нет данных", summa: 1, foiz: 0, color: "#3f3f46" }]
+
+      return {
+        items: calculatedItems,
+        totalSumma: rawTotal,
+        chartData: validChartItems.length > 0 ? validChartItems : fallbackChart,
+      }
+    }
+
+    // 2. Fallback to period-based creditors
     const do15 = getCreditorVal(apiData, "15")
     const ot15do30 = getCreditorVal(apiData, "15_30")
     const ot30do60 = getCreditorVal(apiData, "30_60")
@@ -80,38 +217,35 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
     const do30 = do15 + ot15do30
     let rawTotal = do30 + ot30do60 + ot60do90 + bolee90
 
-    // Agar har bir davr 0 bo'lsa-yu, lekin Itogo mavjud bo'lsa
     if (rawTotal === 0) {
       const itogo = getCreditorVal(apiData, "itogo")
       if (itogo > 0) {
         rawTotal = itogo > 100_000 ? itogo : itogo * 1_000_000
+      } else if (apiData.КредиторскаяЗадолженность || apiData.КредеторскаяЗадолженность) {
+        rawTotal = parseNumeric(apiData.КредиторскаяЗадолженность ?? apiData.КредеторскаяЗадолженность)
       }
     }
 
     const rawItems = [
       {
-        period: "До 30 дней",
+        name: "До 30 дней",
         summa: do30,
         color: "#22c55e",
-        bgKlass: "bg-emerald-500",
       },
       {
-        period: "30 - 60 дней",
+        name: "30 - 60 дней",
         summa: ot30do60,
         color: "#eab308",
-        bgKlass: "bg-yellow-500",
       },
       {
-        period: "60 - 90 дней",
+        name: "60 - 90 дней",
         summa: ot60do90,
         color: "#f97316",
-        bgKlass: "bg-orange-500",
       },
       {
-        period: "Более 90 дней",
+        name: "Более 90 дней",
         summa: bolee90,
         color: "#ef4444",
-        bgKlass: "bg-red-500",
       },
     ]
 
@@ -123,11 +257,10 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
     const validChartItems = calculatedItems.filter((item) => item.summa > 0)
     const fallbackChart = [
       {
-        period: "Нет данных",
+        name: "Нет данных",
         summa: 1,
         foiz: 0,
         color: "#3f3f46",
-        bgKlass: "bg-zinc-700",
       },
     ]
 
@@ -136,33 +269,40 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
       totalSumma: rawTotal,
       chartData: validChartItems.length > 0 ? validChartItems : fallbackChart,
     }
-  }, [apiData])
+  }, [apiData, branch])
 
+  if ((isLongLoading || isLoading) && !apiData) {
+    return <CreditorskayaSkeleton />
+  }
 
   const totalFormatted =
     totalSumma >= 1_000_000_000
       ? (totalSumma / 1_000_000_000).toLocaleString("ru-RU", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-      : (totalSumma / 1_000_000).toLocaleString("ru-RU", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : totalSumma >= 1_000_000
+      ? (totalSumma / 1_000_000).toLocaleString("ru-RU", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : totalSumma.toLocaleString("ru-RU")
 
-  const unit = totalSumma >= 1_000_000_000 ? "млрд сум" : "млн сум"
+  const unit =
+    totalSumma >= 1_000_000_000
+      ? "млрд сум"
+      : totalSumma >= 1_000_000
+      ? "млн сум"
+      : "сум"
 
   return (
     <div className="w-full h-full">
-      <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full relative">
+      <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full overflow-hidden">
         {/* Header Title */}
-        <div className="mb-3.5 pb-2.5 sm:mb-4 sm:pb-3 border-b border-zinc-800/40 flex items-center justify-between">
+        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
           <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             КРЕДИТОРСКАЯ ЗАДОЛЖЕННОСТЬ
           </h2>
-          {isLoading && !apiData && (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-500" />
-          )}
         </div>
 
         {/* Content Layout */}
@@ -217,21 +357,22 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
           </div>
 
           {/* Right Side: Data Legend */}
-          <div className="w-full flex-1 flex flex-col justify-center gap-3">
+          <div className="w-full flex-1 flex flex-col justify-center gap-2.5 max-h-48 overflow-y-auto pr-1">
             {items.map((item, idx) => (
               <div key={idx} className="flex items-start gap-2.5">
                 {/* Color Box */}
                 <span
-                  className={`w-3 h-3 rounded-[2px] shrink-0 mt-0.5 ${item.bgKlass}`}
+                  className="w-3 h-3 rounded-xs shrink-0 mt-0.5"
+                  style={{ backgroundColor: item.color }}
                 />
 
                 {/* Info */}
-                <div className="flex flex-col leading-tight">
-                  <span className="text-zinc-300 text-xs font-normal">
-                    {item.period}
+                <div className="flex flex-col leading-tight min-w-0">
+                  <span className="text-zinc-300 text-xs font-normal truncate" title={item.name}>
+                    {item.name}
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-zinc-100 text-xs font-semibold">
+                    <span className="text-zinc-100 text-xs font-semibold font-mono">
                       {formatSuma(item.summa)}
                     </span>
                     <span className="text-zinc-400 text-xs font-normal">
@@ -247,4 +388,3 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
     </div>
   )
 }
-

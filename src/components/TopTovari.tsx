@@ -13,6 +13,17 @@ interface TopTovariProps {
   branch?: number
 }
 
+function parseNumeric(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  if (typeof val === "string") {
+    const cleaned = val.replace(/\s/g, "").replace(",", ".")
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  return 0
+}
+
 function TopTovariSkeleton() {
   return (
     <div className="w-full h-full">
@@ -60,6 +71,20 @@ export function TopTovari({ date, branch }: TopTovariProps) {
   const data: ProductSaleItem[] = useMemo(() => {
     if (!apiData) return []
 
+    // 1. Check array format
+    for (const [key, val] of Object.entries(apiData)) {
+      const kLower = key.toLowerCase()
+      if ((kLower.includes("топ10") || kLower.includes("топ_10") || kLower.includes("топтоваров")) && Array.isArray(val) && val.length > 0) {
+        return val.map((row) => {
+          const r = row as Record<string, unknown>
+          const name = String(r.Товар ?? r.Наименование ?? r.Номенклатура ?? r.name ?? r.product ?? "").trim()
+          const value = parseNumeric(r.Сумма ?? r.summa ?? r.Продажи ?? r.amount ?? r.value)
+          return { name, value }
+        }).filter((it) => it.name && it.value > 0)
+      }
+    }
+
+    // 2. Check flat keys format
     const extracted: { rank: number; name: string; value: number }[] = []
 
     for (const key in apiData) {
@@ -75,7 +100,7 @@ export function TopTovari({ date, branch }: TopTovariProps) {
           .replace(/\s+/g, " ")
           .trim()
         const rawVal = (apiData as Record<string, unknown>)[key]
-        const value = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/\s/g, "").replace(",", ".")) || 0
+        const value = parseNumeric(rawVal)
         extracted.push({ rank, name, value })
       }
     }
