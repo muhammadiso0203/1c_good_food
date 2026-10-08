@@ -169,76 +169,79 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
     }> = []
 
     if (apiData && typeof apiData === "object") {
-      // 1. Array-based extraction from apiData
+      // 1. Array-based extraction: Strictly find "ОстаткиТовараПоБрэндам" / "Остатки..."
+      let brandArray: unknown[] | null = null
+
       for (const [k, v] of Object.entries(apiData)) {
         const kLower = k.toLowerCase()
         if (
           Array.isArray(v) &&
-          (kLower.includes("остат") ||
-            kLower.includes("брэнд") ||
-            kLower.includes("бренд") ||
-            kLower.includes("brand") ||
-            kLower.includes("товар") ||
-            kLower === "items" ||
-            kLower === "data") &&
-          !kLower.includes("статус") &&
+          v.length > 0 &&
+          kLower.includes("остат") &&
+          !kLower.includes("деб") &&
+          !kLower.includes("кред") &&
           !kLower.includes("динамик") &&
           !kLower.includes("деньги") &&
-          !kLower.includes("топ10") &&
           !kLower.includes("топ") &&
-          !kLower.includes("неликвид")
+          !kLower.includes("неликвид") &&
+          !kLower.includes("статус")
         ) {
-          for (const item of v) {
-            if (item && typeof item === "object") {
-              const row = item as Record<string, unknown>
-              const name = String(
-                row.БРЭНД ?? row.Бренд ?? row.брэнд ?? row.бренд ?? row.Brand ?? row.brand ??
-                row.brand_name ?? row.brandName ?? row.Brend ?? row.brend ??
-                row.Марка ?? row.марка ?? row.Производитель ?? row.производитель ??
-                row.Группа ?? row.группа ?? row.Категория ?? row.категория ??
-                row.Товар ?? row.товар ?? row.Наименование ?? row.наименование ??
-                row.ТоварНаименование ?? row.Номенклатура ?? row.номенклатура ??
-                row.name ?? row.Name ?? row.title ?? row.label ?? row.Nomi ?? row.nomi ?? ""
-              ).trim()
+          brandArray = v
+          break
+        }
+      }
 
-              let sum = parseNum(
-                row.Сумма ?? row.summa ?? row.Summa ?? row.sum ?? row.Sum ??
-                row.Остаток ?? row.ostatok ?? row.Ostatok ?? row.amount ?? row.Amount ??
-                row.value ?? row.Value ?? row.СуммаОстатка ?? row.сумма_остатка ??
-                row.Стоимость ?? row.стоимость ?? row.Cost ?? row.cost ??
-                row.Итого ?? row.итого ?? row.Total ?? row.total
-              )
+      if (brandArray && brandArray.length > 0) {
+        for (const item of brandArray) {
+          if (item && typeof item === "object") {
+            const row = item as Record<string, unknown>
+            const name = String(
+              row.БРЭНД ?? row.Бренд ?? row.брэнд ?? row.бренд ?? row.Brand ?? row.brand ??
+              row.brand_name ?? row.brandName ?? row.Brend ?? row.brend ??
+              row.Марка ?? row.марка ?? row.Производитель ?? row.производитель ??
+              row.Группа ?? row.группа ?? row.Категория ?? row.категория ??
+              row.Товар ?? row.товар ?? row.Наименование ?? row.наименование ??
+              row.ТоварНаименование ?? row.Номенклатура ?? row.номенклатура ??
+              row.name ?? row.Name ?? row.title ?? row.label ?? row.Nomi ?? row.nomi ?? ""
+            ).trim()
 
-              let percent = parseNum(
-                row.Процент ?? row.процент ?? row.percent ?? row.Percent ??
-                row.Foiz ?? row.foiz ?? row.Доля ?? row.доля ?? row.share ?? row.Share
-              )
+            let sum = parseNum(
+              row.Сумма ?? row.summa ?? row.Summa ?? row.sum ?? row.Sum ??
+              row.Остаток ?? row.ostatok ?? row.Ostatok ?? row.amount ?? row.Amount ??
+              row.value ?? row.Value ?? row.СуммаОстатка ?? row.сумма_остатка ??
+              row.Стоимость ?? row.стоимость ?? row.Cost ?? row.cost ??
+              row.Итого ?? row.итого ?? row.Total ?? row.total
+            )
 
-              if (typeof row.Сумма === "string" && row.Сумма.includes("_")) {
-                const parts = row.Сумма.split("_")
-                const parsedSum = parseNum(parts[0])
-                const parsedPercent = parseNum(parts[1])
-                if (parsedSum > 0) sum = parsedSum
-                if (parsedPercent > 0 && percent === 0) percent = parsedPercent
-              }
-              if (typeof row.Остаток === "string" && row.Остаток.includes("_")) {
-                const parts = row.Остаток.split("_")
-                const parsedSum = parseNum(parts[0])
-                const parsedPercent = parseNum(parts[1])
-                if (parsedSum > 0) sum = parsedSum
-                if (parsedPercent > 0 && percent === 0) percent = parsedPercent
-              }
+            let percent = parseNum(
+              row.Процент ?? row.процент ?? row.percent ?? row.Percent ??
+              row.Foiz ?? row.foiz ?? row.Доля ?? row.доля ?? row.share ?? row.Share
+            )
 
-              if (name && (sum > 0 || percent > 0)) {
-                const itemBranch = getBranchFromRow(row, name)
-                rawItems.push({ rawName: name, sum, percent, itemBranch })
-              }
+            if (typeof row.Сумма === "string" && row.Сумма.includes("_")) {
+              const parts = row.Сумма.split("_")
+              const parsedSum = parseNum(parts[0])
+              const parsedPercent = parseNum(parts[1])
+              if (parsedSum > 0) sum = parsedSum
+              if (parsedPercent > 0 && percent === 0) percent = parsedPercent
+            }
+            if (typeof row.Остаток === "string" && row.Остаток.includes("_")) {
+              const parts = row.Остаток.split("_")
+              const parsedSum = parseNum(parts[0])
+              const parsedPercent = parseNum(parts[1])
+              if (parsedSum > 0) sum = parsedSum
+              if (parsedPercent > 0 && percent === 0) percent = parsedPercent
+            }
+
+            if (name && (sum > 0 || percent > 0)) {
+              const itemBranch = getBranchFromRow(row, name)
+              rawItems.push({ rawName: name, sum, percent, itemBranch })
             }
           }
         }
       }
 
-      // 2. Flat keys fallback if no array items found
+      // 2. Flat keys fallback ONLY if no dedicated array was found
       if (rawItems.length === 0) {
         for (const [key, value] of Object.entries(apiData)) {
           const kLower = key.toLowerCase()
@@ -247,14 +250,15 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
               kLower.startsWith("остаткипобрендам_") ||
               kLower.startsWith("остатки_бренд_") ||
               kLower.startsWith("остатки_брэнд_") ||
-              kLower.startsWith("бренд_") ||
-              kLower.startsWith("брэнд_") ||
-              kLower.startsWith("brand_") ||
               kLower.startsWith("остатокпобренду_") ||
               kLower.startsWith("остатокпобрэнду_") ||
-              (kLower.includes("бренд") && !kLower.includes("статус") && !kLower.includes("топ"))) &&
+              (kLower.includes("остат") && kLower.includes("бренд"))) &&
+            !kLower.includes("деб") &&
+            !kLower.includes("кред") &&
             !kLower.includes("динамик") &&
-            !kLower.includes("статусостатков")
+            !kLower.includes("статусостатков") &&
+            !kLower.includes("топ") &&
+            !kLower.includes("деньги")
           ) {
             const cleanKeyName = key
               .replace(/^(?:ОстаткиПоБрэндам_|ОстаткиПоБрендам_|Остатки_Бренд_|Остатки_Брэнд_|Бренд_|Брэнд_|Brand_|ОстатокПоБренду_|ОстатокПоБрэнду_)/i, "")
@@ -285,14 +289,10 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
     let filteredItems: typeof rawItems = []
 
     if (branch && branch !== 1) {
-      // A. Check if any items explicitly match the selected branch (e.g. 3 for Guliston)
       const exactMatches = rawItems.filter((item) => item.itemBranch === branch)
-
       if (exactMatches.length > 0) {
         filteredItems = exactMatches
       } else {
-        // B. If items don't have explicit branch tags (backend was queried with ID: branchId),
-        // include items that do NOT explicitly belong to another known branch
         const nonConflicting = rawItems.filter(
           (item) => item.itemBranch === null || item.itemBranch === branch
         )
@@ -302,7 +302,7 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
       filteredItems = rawItems
     }
 
-    // 4. Clean brand names (remove branch parts) and aggregate
+    // 4. Clean brand names and aggregate
     const aggregatedMap = new Map<string, { sum: number; percent: number }>()
 
     for (const item of filteredItems) {
@@ -440,7 +440,7 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
             </div>
 
             {/* Rows list (scrollable if > 4 items) */}
-            <div className="flex flex-col divide-y divide-zinc-800/10 max-h-48 sm:max-h-52 overflow-y-auto pr-1.5 custom-scrollbar">
+            <div className="flex flex-col divide-y divide-zinc-800/10 max-h-48 sm:max-h-52 overflow-y-auto pr-1.5 custom-scrollbar [scrollbar-width:thin] [scrollbar-color:rgba(113,113,122,0.4)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-700/60 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
               {brandData.map((item, idx) => (
                 <div
                   key={idx}

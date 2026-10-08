@@ -30,8 +30,8 @@ export const useMainpage = (dateRange?: DateRange, branch: number = 1) => {
             return Array.isArray(raw) ? raw[0] : raw
         },
         staleTime: 1000 * 5, // 5 soniya
-        gcTime: 1000 * 60 * 10,
-        refetchOnWindowFocus: false,
+        gcTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: true,
         refetchOnMount: true,
     })
 }
@@ -78,9 +78,9 @@ export const useMainpageLong = (dateRange?: DateRange, branch: number = 1) => {
                 }
             }
         },
-        staleTime: 1000 * 60 * 2, // 2 daqiqa
-        gcTime: 1000 * 60 * 10,
-        refetchOnWindowFocus: false,
+        staleTime: 1000 * 5, // 5 soniya
+        gcTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: true,
         refetchOnMount: true,
     })
 }

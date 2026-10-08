@@ -17,7 +17,7 @@ interface RegionConfig {
 
 const REGIONS: RegionConfig[] = [
   { id: 2, name: "Ташкент", aliases: ["ташкент", "тошкент", "tashkent", "toshkent", "2"] },
-  { id: 3, name: "Гулистан", aliases: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "sirdaryo", "3"] },
+  { id: 3, name: "Гулистан", aliases: ["гулистан", "гулистон", "сырдар", "сурдар", "gulistan", "guliston", "sirdaryo", "сирдарё", "сирдарья", "3"] },
   { id: 4, name: "Джизак", aliases: ["джизак", "жиззах", "jizzax", "dzhizak", "4"] },
 ]
 
@@ -113,16 +113,23 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
       return activeRegions.map((r) => ({ filial: r.name, schet: 0, kassa: 0 }))
     }
 
-    // Collect array data if present (e.g. ДеньгиНаСчетахПоРегионам / ДеньгиВКассахПоРегионам)
+    // Collect array data (e.g. ДеньгиНаСчетахПоРегионам / ДеньгиВКассахПоРегионам)
     const schetArray: unknown[] = []
     const kassaArray: unknown[] = []
 
     for (const [k, v] of Object.entries(apiData)) {
       const kLower = k.toLowerCase()
       if (Array.isArray(v)) {
-        if (kLower.includes("счет") || kLower.includes("счёт") || kLower.includes("расч")) {
+        if (
+          kLower.includes("деньгинасчет") ||
+          (kLower.includes("счет") && !kLower.includes("касс")) ||
+          (kLower.includes("расч") && !kLower.includes("касс"))
+        ) {
           schetArray.push(...v)
-        } else if (kLower.includes("касс")) {
+        } else if (
+          kLower.includes("деньгивкасс") ||
+          (kLower.includes("касс") && !kLower.includes("счет"))
+        ) {
           kassaArray.push(...v)
         }
       }
@@ -157,14 +164,16 @@ export function DengiNaSchetax({ date, branch }: { date?: DateRange; branch?: nu
       }
 
       // 3. Fallback: check in flat object keys
-      for (const [key, rawVal] of Object.entries(apiData)) {
-        const kLower = key.toLowerCase()
-        if (matchesBranch(kLower, reg)) {
-          const val = parseNum(rawVal)
-          if (kLower.includes("расч") || kLower.includes("счет") || kLower.includes("счёт")) {
-            if (schet === 0 && val > 0) schet = val
-          } else if (kLower.includes("касс")) {
-            if (kassa === 0 && val > 0) kassa = val
+      if (schet === 0 || kassa === 0) {
+        for (const [key, rawVal] of Object.entries(apiData)) {
+          const kLower = key.toLowerCase()
+          if (matchesBranch(kLower, reg)) {
+            const val = parseNum(rawVal)
+            if (kLower.includes("расч") || kLower.includes("счет") || kLower.includes("счёт")) {
+              if (schet === 0 && val > 0) schet = val
+            } else if (kLower.includes("касс")) {
+              if (kassa === 0 && val > 0) kassa = val
+            }
           }
         }
       }

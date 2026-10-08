@@ -16,7 +16,6 @@ import { cn } from "../lib/utils"
 import { useData } from "../pages/service/useData"
 import type { DateRange } from "react-day-picker"
 
-
 export interface StatCardProps {
   title: string
   value: string
@@ -32,21 +31,32 @@ export interface StatCardProps {
   iconColor: string
 }
 
-
-
-const formatNumber = (val?: number) => {
-  if (val === undefined || val === null) return "0"
-  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(val)
+function parseNum(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  if (typeof val === "string") {
+    const cleaned = val.replace(/\s/g, "").replace(",", ".")
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  return 0
 }
 
-const formatTrend = (val?: number, label = "за период", invertPositive = false) => {
+const formatNumber = (val?: unknown) => {
+  if (val === undefined || val === null) return "0"
+  const num = parseNum(val)
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(num)
+}
+
+const formatTrend = (val?: unknown, label = "за период", invertPositive = false) => {
   if (val === undefined || val === null) {
     return { value: "0%", label, isPositive: true, isUp: true }
   }
-  const isUp = val >= 0
-  const isPositive = invertPositive ? val <= 0 : val >= 0
+  const num = parseNum(val)
+  const isUp = num >= 0
+  const isPositive = invertPositive ? num <= 0 : num >= 0
   return {
-    value: `${val > 0 ? "+" : ""}${val}%`,
+    value: `${num > 0 ? "+" : ""}${num}%`,
     label,
     isPositive,
     isUp
@@ -86,19 +96,23 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
   const { data, isLoading } = useData(date, branch)
 
   const prosrochennayaDebitorka = useMemo(() => {
-    if (!data) return undefined
-    if (typeof data.ПросроченнаяДебиторка === "number") return data.ПросроченнаяДебиторка
-    const d15 = Number(data.ПросроченнаяДебиторка_15) || 0
-    const d15_30 = Number(data.ПросроченнаяДебиторка_15_30) || 0
-    const d30_60 = Number(data.ПросроченнаяДебиторка_30_60) || 0
-    const d60_90 = Number(data.ПросроченнаяДебиторка_60_90) || 0
-    const d90 = Number(data.ПросроченнаяДебиторка_90) || 0
+    if (!data) return 0
+    if (data.ПросроченнаяДебиторка !== undefined && data.ПросроченнаяДебиторка !== null) {
+      const parsed = parseNum(data.ПросроченнаяДебиторка)
+      if (parsed > 0) return parsed
+    }
+    const d15 = parseNum(data.ПросроченнаяДебиторка_15)
+    const d15_30 = parseNum(data.ПросроченнаяДебиторка_15_30)
+    const d30_60 = parseNum(data.ПросроченнаяДебиторка_30_60)
+    const d60_90 = parseNum(data.ПросроченнаяДебиторка_60_90)
+    const d90 = parseNum(data.ПросроченнаяДебиторка_90)
     const sum = d15 + d15_30 + d30_60 + d60_90 + d90
     if (sum > 0) return sum
-    if (typeof data.ПросроченнаяДебиторка_Итого === "number" && data.ПросроченнаяДебиторка_Итого > 0) {
-      return data.ПросроченнаяДебиторка_Итого > 100_000
-        ? data.ПросроченнаяДебиторка_Итого
-        : data.ПросроченнаяДебиторка_Итого * 1_000_000
+    if (data.ПросроченнаяДебиторка_Итого !== undefined && data.ПросроченнаяДебиторка_Итого !== null) {
+      const itogo = parseNum(data.ПросроченнаяДебиторка_Итого)
+      if (itogo > 0) {
+        return itogo > 100_000 ? itogo : itogo * 1_000_000
+      }
     }
     return 0
   }, [data])
@@ -123,8 +137,8 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ВЫПОЛНЕНИЕ ПЛАНА",
       value: `${formatNumber(data?.ВыполнениеПлана_вопрос_3)}%`,
-      progress: data?.ВыполнениеПлана_вопрос_3,
-      trend: formatTrend(Number(data?.ВыполнениеПланаИзменение_вопрос_3), "за период"),
+      progress: data?.ВыполнениеПлана_вопрос_3 ? parseNum(data.ВыполнениеПлана_вопрос_3) : undefined,
+      trend: formatTrend(data?.ВыполнениеПланаИзменение_вопрос_3, "за период"),
       icon: Target,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
     },

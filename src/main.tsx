@@ -14,10 +14,10 @@ try {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 daqiqa keshda turadi
-      gcTime: 1000 * 60 * 10,
-      refetchOnWindowFocus: false,
-      refetchOnMount: true, // Sahifaga kirganda har doim yangi ma'lumot tekshiradi
+      staleTime: 1000 * 5, // 5 soniya - tezkor va real vaqt ma'lumotlari
+      gcTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
     },
   },
 })
@@ -29,5 +29,3 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 )
-
-

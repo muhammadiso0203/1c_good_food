@@ -17,33 +17,6 @@ interface StatusOstatkovProps {
   branch?: number
 }
 
-const defaultFallbackData: StatusOstatkovItem[] = [
-  {
-    status: "Норма запаса",
-    sku: 2856,
-    foiz: 59,
-    color: "#10b981", // emerald-500
-    bgKlass: "bg-emerald-500",
-    textKlass: "text-emerald-400",
-  },
-  {
-    status: "Мало (<= мин. запаса)",
-    sku: 1124,
-    foiz: 23,
-    color: "#f59e0b", // amber-500
-    bgKlass: "bg-amber-500",
-    textKlass: "text-amber-400",
-  },
-  {
-    status: "Нет в наличии",
-    sku: 846,
-    foiz: 18,
-    color: "#ef4444", // red-500
-    bgKlass: "bg-red-500",
-    textKlass: "text-red-400",
-  },
-]
-
 function StatusOstatkovSkeleton() {
   return (
     <div className="w-full h-full">
@@ -81,57 +54,86 @@ function StatusOstatkovSkeleton() {
   )
 }
 
+function parseNumeric(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  if (typeof val === "string") {
+    const cleaned = val.replace(/\s/g, "").replace(",", ".")
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  return 0
+}
+
+function parseStatusVal(val: unknown): { sku: number; foiz: number } {
+  if (val === undefined || val === null) return { sku: 0, foiz: 0 }
+  if (typeof val === "number") return { sku: isNaN(val) ? 0 : Math.round(val), foiz: 0 }
+  if (typeof val === "string") {
+    const parts = val.split("_")
+    const sku = parseNumeric(parts[0])
+    const foiz = parts.length > 1 ? parseNumeric(parts[1]) : 0
+    return { sku: Math.round(sku), foiz: Math.round(foiz) }
+  }
+  return { sku: 0, foiz: 0 }
+}
+
 export function StatusOstatkov({ date, branch }: StatusOstatkovProps) {
   const { data: apiData, isLoading } = useData(date, branch)
 
-  const parseStatusVal = (val: unknown): { sku: number; foiz: number } => {
-    if (val === undefined || val === null) return { sku: 0, foiz: 0 }
-    if (typeof val === "number") return { sku: isNaN(val) ? 0 : val, foiz: 0 }
-    if (typeof val === "string") {
-      const parts = val.split("_")
-      const sku = parseFloat(parts[0].replace(/\s/g, "").replace(",", ".")) || 0
-      const foiz = parts[1] !== undefined ? parseFloat(parts[1].replace(/\s/g, "").replace(",", ".")) || 0 : 0
-      return { sku: Math.round(sku), foiz: Math.round(foiz) }
-    }
-    return { sku: 0, foiz: 0 }
-  }
-
   const data: StatusOstatkovItem[] = useMemo(() => {
-    if (!apiData) return defaultFallbackData
+    let norm = { sku: 0, foiz: 0 }
+    let malo = { sku: 0, foiz: 0 }
+    let net = { sku: 0, foiz: 0 }
 
-    let rawNorma: unknown
-    let rawMalo: unknown
-    let rawNet: unknown
-    let hasMatchingKey = false
+    if (apiData && typeof apiData === "object") {
+      // 1. Check array format
+      for (const [key, val] of Object.entries(apiData)) {
+        const kLower = key.toLowerCase()
+        if (
+          Array.isArray(val) &&
+          val.length > 0 &&
+          (kLower.includes("статусостат") || kLower.includes("статус_остат") || kLower.includes("statusostatk"))
+        ) {
+          for (const item of val) {
+            if (!item || typeof item !== "object") continue
+            const row = item as Record<string, unknown>
+            const statusName = String(row.Статус ?? row.Status ?? row.name ?? row.Наименование ?? "").toLowerCase()
+            const sku = parseNumeric(row.SKU ?? row.sku ?? row.Количество ?? row.Кол ?? row.count ?? row.qty ?? row.Сумма ?? row.summa)
+            const foiz = parseNumeric(row.Процент ?? row.Percent ?? row.percent ?? row.foiz ?? row.Foiz)
 
-    for (const [key, value] of Object.entries(apiData)) {
-      const kLower = key.toLowerCase()
-      if (
-        kLower.includes("статусостатков") ||
-        kLower.includes("нормазапаса") ||
-        kLower.includes("мало") ||
-        kLower.includes("нетвналичии")
-      ) {
-        if (kLower.includes("нормазапаса") || kLower.includes("norma")) {
-          rawNorma = value
-          hasMatchingKey = true
-        } else if (kLower.includes("мало") || kLower.includes("malo")) {
-          rawMalo = value
-          hasMatchingKey = true
-        } else if (kLower.includes("нетвналичии") || kLower.includes("netvnalichii") || kLower.includes("нет_в_наличии")) {
-          rawNet = value
-          hasMatchingKey = true
+            if (statusName.includes("норм") || statusName.includes("norm")) {
+              norm = { sku: Math.round(sku), foiz: Math.round(foiz) }
+            } else if (statusName.includes("мал") || statusName.includes("malo") || statusName.includes("мин")) {
+              malo = { sku: Math.round(sku), foiz: Math.round(foiz) }
+            } else if (statusName.includes("нет") || statusName.includes("net") || statusName.includes("отсут")) {
+              net = { sku: Math.round(sku), foiz: Math.round(foiz) }
+            }
+          }
+          break
+        }
+      }
+
+      // 2. Check flat keys format if not extracted from array
+      if (norm.sku === 0 && malo.sku === 0 && net.sku === 0) {
+        for (const [key, value] of Object.entries(apiData)) {
+          const kLower = key.toLowerCase()
+          if (
+            kLower.includes("статусостатков") ||
+            kLower.includes("нормазапаса") ||
+            kLower.includes("мало") ||
+            kLower.includes("нетвналичии")
+          ) {
+            if (kLower.includes("нормазапаса") || kLower.includes("norma")) {
+              norm = parseStatusVal(value)
+            } else if (kLower.includes("мало") || kLower.includes("malo")) {
+              malo = parseStatusVal(value)
+            } else if (kLower.includes("нетвналичии") || kLower.includes("netvnalichii") || kLower.includes("нет_в_наличии")) {
+              net = parseStatusVal(value)
+            }
+          }
         }
       }
     }
-
-    if (!hasMatchingKey) {
-      return defaultFallbackData
-    }
-
-    const norm = parseStatusVal(rawNorma)
-    const malo = parseStatusVal(rawMalo)
-    const net = parseStatusVal(rawNet)
 
     const total = norm.sku + malo.sku + net.sku
 
@@ -177,7 +179,7 @@ export function StatusOstatkov({ date, branch }: StatusOstatkovProps) {
     if (totalSKU === 0) {
       return [{ status: "Нет данных", sku: 1, color: "#374151" }]
     }
-    return data
+    return data.filter((item) => item.sku > 0)
   }, [data, totalSKU])
 
   if (isLoading && !apiData) {
@@ -210,7 +212,7 @@ export function StatusOstatkov({ date, branch }: StatusOstatkovProps) {
                   cy="50%"
                   innerRadius={45}
                   outerRadius={60}
-                  paddingAngle={0}
+                  paddingAngle={chartData.length > 1 ? 1 : 0}
                   dataKey="sku"
                   startAngle={90}
                   endAngle={-270}

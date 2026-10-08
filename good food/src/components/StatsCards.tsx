@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import {
   ShoppingCart,
   BarChart3,
@@ -15,7 +16,6 @@ import { cn } from "../lib/utils"
 import { useData } from "../pages/service/useData"
 import type { DateRange } from "react-day-picker"
 
-
 export interface StatCardProps {
   title: string
   value: string
@@ -31,21 +31,32 @@ export interface StatCardProps {
   iconColor: string
 }
 
-
-
-const formatNumber = (val?: number) => {
-  if (val === undefined || val === null) return "0"
-  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(val)
+function parseNum(val: unknown): number {
+  if (val === undefined || val === null) return 0
+  if (typeof val === "number") return isNaN(val) ? 0 : val
+  if (typeof val === "string") {
+    const cleaned = val.replace(/\s/g, "").replace(",", ".")
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  return 0
 }
 
-const formatTrend = (val?: number, label = "за период", invertPositive = false) => {
+const formatNumber = (val?: unknown) => {
+  if (val === undefined || val === null) return "0"
+  const num = parseNum(val)
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(num)
+}
+
+const formatTrend = (val?: unknown, label = "за период", invertPositive = false) => {
   if (val === undefined || val === null) {
     return { value: "0%", label, isPositive: true, isUp: true }
   }
-  const isUp = val >= 0
-  const isPositive = invertPositive ? val <= 0 : val >= 0
+  const num = parseNum(val)
+  const isUp = num >= 0
+  const isPositive = invertPositive ? num <= 0 : num >= 0
   return {
-    value: `${val > 0 ? "+" : ""}${val}%`,
+    value: `${num > 0 ? "+" : ""}${num}%`,
     label,
     isPositive,
     isUp
@@ -54,7 +65,7 @@ const formatTrend = (val?: number, label = "за период", invertPositive =
 
 const SkeletonCard = () => {
   return (
-    <div className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 rounded-xl animate-pulse min-h-[130px]">
+    <div className="flex flex-col justify-between p-3 sm:p-3.5 xl:p-4 bg-gray-800 border border-zinc-800/40 rounded-xl animate-pulse min-h-32.5">
       {/* Header */}
       <div className="flex items-start gap-2 mb-3">
         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-700/60 shrink-0" />
@@ -84,12 +95,33 @@ const SkeletonCard = () => {
 export function StatsCards({ date, branch }: { date?: DateRange; branch?: number }) {
   const { data, isLoading } = useData(date, branch)
 
+  const prosrochennayaDebitorka = useMemo(() => {
+    if (!data) return 0
+    if (data.ПросроченнаяДебиторка !== undefined && data.ПросроченнаяДебиторка !== null) {
+      const parsed = parseNum(data.ПросроченнаяДебиторка)
+      if (parsed > 0) return parsed
+    }
+    const d15 = parseNum(data.ПросроченнаяДебиторка_15)
+    const d15_30 = parseNum(data.ПросроченнаяДебиторка_15_30)
+    const d30_60 = parseNum(data.ПросроченнаяДебиторка_30_60)
+    const d60_90 = parseNum(data.ПросроченнаяДебиторка_60_90)
+    const d90 = parseNum(data.ПросроченнаяДебиторка_90)
+    const sum = d15 + d15_30 + d30_60 + d60_90 + d90
+    if (sum > 0) return sum
+    if (data.ПросроченнаяДебиторка_Итого !== undefined && data.ПросроченнаяДебиторка_Итого !== null) {
+      const itogo = parseNum(data.ПросроченнаяДебиторка_Итого)
+      if (itogo > 0) {
+        return itogo > 100_000 ? itogo : itogo * 1_000_000
+      }
+    }
+    return 0
+  }, [data])
 
   const defaultStats: StatCardProps[] = [
     {
       title: "ПРОДАЖИ СЕГОДНЯ",
       value: formatNumber(data?.ПродажиСегодня),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ПродажиИзменениеДень, "к вчера"),
       icon: ShoppingCart,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
@@ -97,23 +129,23 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ПРОДАЖИ ЗА ПЕРИОД",
       value: formatNumber(data?.ПродажиПериод),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ПродажиИзменениеПериод, "за период"),
       icon: BarChart3,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
     },
     {
       title: "ВЫПОЛНЕНИЕ ПЛАНА",
-      value: "86%",
-      progress: 86,
-      trend: { value: "6 п.п.", label: "за период", isPositive: true, isUp: true },
+      value: `${formatNumber(data?.ВыполнениеПлана_вопрос_3)}%`,
+      progress: data?.ВыполнениеПлана_вопрос_3 ? parseNum(data.ВыполнениеПлана_вопрос_3) : undefined,
+      trend: formatTrend(data?.ВыполнениеПланаИзменение_вопрос_3, "за период"),
       icon: Target,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
     },
     {
       title: "ВАЛОВАЯ ПРИБЫЛЬ",
       value: formatNumber(data?.ВаловаяПрибыль),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ВаловаяПрибыльИзменение, "за период"),
       icon: TrendingUp,
       iconColor: "bg-emerald-950/40 text-emerald-400 border border-emerald-500/20",
@@ -121,7 +153,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ОСТАТОК ТОВАРА",
       value: formatNumber(data?.ОстатокТовара),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ОстатокТовараИзменение, "за период"),
       icon: Package,
       iconColor: "bg-blue-950/40 text-blue-400 border border-blue-500/20",
@@ -129,7 +161,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ДЕНЬГИ НА СЧЕТАХ",
       value: formatNumber(data?.ДеньгиНаСчетах),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ДеньгиНаСчетахИзменение, "за период"),
       icon: Landmark,
       iconColor: "bg-blue-950/40 text-blue-400 border border-blue-500/20",
@@ -137,7 +169,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ДЕНЬГИ В КАССАХ",
       value: formatNumber(data?.ДеньгиВКассах),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ДеньгиВКассахИзменение, "за период"),
       icon: Coins,
       iconColor: "bg-purple-950/40 text-purple-400 border border-purple-500/20",
@@ -145,15 +177,15 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "ДЕБИТОРСКАЯ ЗАДОЛЖ.",
       value: formatNumber(data?.ДебиторскаяЗадолженность),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.ДебиторскаяЗадолженностьИзменение, "за период"),
       icon: UserCheck,
       iconColor: "bg-amber-950/40 text-amber-400 border border-amber-500/20",
     },
     {
       title: "ПРОСРОЧЕННАЯ ДЕБИТОРКА",
-      value: formatNumber(data?.ПросроченнаяДебиторка),
-      unit: "тыс сум",
+      value: formatNumber(prosrochennayaDebitorka),
+      unit: "сум",
       trend: formatTrend(data?.ПросроченнаяДебиторкаИзменение, "за период"),
       icon: Clock,
       iconColor: "bg-rose-950/40 text-rose-400 border border-rose-500/20",
@@ -161,7 +193,7 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
     {
       title: "НЕЛИКВИДНЫЙ ТОВАР",
       value: formatNumber(data?.НеликвидныйТовар_30дней),
-      unit: "тыс сум",
+      unit: "сум",
       trend: formatTrend(data?.НеликвидныйТоварИзменение_30дней, "за период"),
       icon: PackageMinus,
       iconColor: "bg-orange-950/40 text-orange-400 border border-orange-500/20",
@@ -169,13 +201,13 @@ export function StatsCards({ date, branch }: { date?: DateRange; branch?: number
   ]
 
   return (
-    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-10 gap-3 xl:gap-3.5 2xl:gap-3.5 3xl:gap-4 mt-4 sm:mt-6">
+    <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-3 xl:gap-3.5 2xl:gap-3.5 3xl:gap-4 mt-4 sm:mt-6">
       {isLoading && !data ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />) : defaultStats.map((stat, idx) => {
         const IconComponent = stat.icon
         return (
           <div
             key={idx}
-            className="flex flex-col justify-between p-3 sm:p-3.5 2xl:p-3.5 3xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-[130px] 2xl:min-h-[138px]"
+            className="flex flex-col justify-between p-3 sm:p-3.5 2xl:p-3.5 3xl:p-4 bg-gray-800 border border-zinc-800/40 hover:border-zinc-700/60 rounded-xl transition-all duration-300 min-h-32.5 2xl:min-h-34.5"
           >
             {/* Header: Icon + Title */}
             <div className="flex items-start gap-2 sm:gap-2.5 mb-2.5">
