@@ -440,7 +440,7 @@ export function OstatkiTovara({ date, branch }: OstatkiTovaraProps) {
             </div>
 
             {/* Rows list (scrollable if > 4 items) */}
-            <div className="flex flex-col divide-y divide-zinc-800/10 max-h-48 sm:max-h-52 overflow-y-auto pr-1">
+            <div className="flex flex-col divide-y divide-zinc-800/10 max-h-48 sm:max-h-52 overflow-y-auto pr-1.5 custom-scrollbar">
               {brandData.map((item, idx) => (
                 <div
                   key={idx}

@@ -83,13 +83,14 @@ function CreditorskayaSkeleton() {
     <div className="w-full h-full">
       <div className="bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full animate-pulse">
         {/* Header Skeleton */}
-        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
+        <div className="flex items-center justify-between border-b border-zinc-800/40 pb-2.5 sm:pb-3 mb-3">
           <div className="h-3 w-48 bg-zinc-700/60 rounded" />
+          <div className="h-2.5 w-16 bg-zinc-700/40 rounded" />
         </div>
 
         {/* Content Layout Skeleton */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 min-h-44 flex-1">
-          {/* Left Side: Doughnut Skeleton + Button */}
+          {/* Left Side: Doughnut Skeleton */}
           <div className="flex flex-col items-center shrink-0">
             <div className="w-32 h-32 rounded-full border-8 border-zinc-700/50 flex items-center justify-center">
               <div className="flex flex-col items-center gap-1.5">
@@ -97,18 +98,18 @@ function CreditorskayaSkeleton() {
                 <div className="h-2 w-10 bg-zinc-700/40 rounded" />
               </div>
             </div>
-            <div className="mt-3 h-7 w-24 bg-zinc-700/60 rounded-lg" />
           </div>
 
           {/* Right Side: Rows Skeleton */}
-          <div className="w-full flex-1 flex flex-col justify-center gap-3.5">
+          <div className="w-full flex-1 flex flex-col gap-2.5">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <div className="w-3 h-3 rounded-xs bg-zinc-700/60 shrink-0 mt-0.5" />
-                <div className="flex flex-col gap-1.5 w-full">
+              <div key={i} className="flex justify-between items-center py-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-xs bg-zinc-700/60 shrink-0" />
                   <div className="h-2.5 w-24 bg-zinc-700/60 rounded" />
-                  <div className="h-2 w-32 bg-zinc-700/40 rounded" />
                 </div>
+                <div className="h-2.5 w-20 bg-zinc-700/40 rounded" />
+                <div className="h-2.5 w-8 bg-zinc-700/40 rounded" />
               </div>
             ))}
           </div>
@@ -122,9 +123,12 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
   const { data: apiData, isLongLoading, isLoading } = useData(date, branch)
 
   const formatSuma = (val: number) => {
-    return Math.round(val)
+    const rounded = Math.round(val)
+    const isNeg = rounded < 0
+    const absFormatted = Math.abs(rounded)
       .toString()
       .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+    return isNeg ? `-${absFormatted}` : absFormatted
   }
 
   const { items, totalSumma, chartData } = useMemo(() => {
@@ -194,7 +198,7 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
 
       const calculatedItems = brandItems.map((item) => ({
         ...item,
-        foiz: rawTotal > 0 ? Math.round((item.summa / rawTotal) * 100) : 0,
+        foiz: rawTotal !== 0 ? Math.round((item.summa / rawTotal) * 100) : 0,
       }))
 
       const validChartItems = calculatedItems.filter((it) => it.summa > 0)
@@ -275,23 +279,27 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
     return <CreditorskayaSkeleton />
   }
 
+  const absTotal = Math.abs(totalSumma)
+  const isNegativeTotal = totalSumma < 0
+  const prefix = isNegativeTotal ? "-" : ""
+
   const totalFormatted =
-    totalSumma >= 1_000_000_000
-      ? (totalSumma / 1_000_000_000).toLocaleString("ru-RU", {
+    absTotal >= 1_000_000_000
+      ? prefix + (absTotal / 1_000_000_000).toLocaleString("ru-RU", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })
-      : totalSumma >= 1_000_000
-      ? (totalSumma / 1_000_000).toLocaleString("ru-RU", {
+      : absTotal >= 1_000_000
+      ? prefix + (absTotal / 1_000_000).toLocaleString("ru-RU", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })
       : totalSumma.toLocaleString("ru-RU")
 
   const unit =
-    totalSumma >= 1_000_000_000
+    absTotal >= 1_000_000_000
       ? "млрд сум"
-      : totalSumma >= 1_000_000
+      : absTotal >= 1_000_000
       ? "млн сум"
       : "сум"
 
@@ -299,89 +307,109 @@ export function CreditorskayaZadoljennost({ date, branch }: CreditorskayaProps) 
     <div className="w-full h-full">
       <div className="relative bg-gray-800/40 border border-zinc-800/60 rounded-xl p-3.5 sm:p-5 select-none flex flex-col justify-between h-full overflow-hidden">
         {/* Header Title */}
-        <div className="mb-4 pb-2.5 sm:mb-5 sm:pb-3 border-b border-zinc-800/40">
-          <h2 className="text-[10px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
+        <div className="flex items-center justify-between border-b border-zinc-800/40 pb-2.5 sm:pb-3 mb-3">
+          <h2 className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-zinc-400 uppercase leading-none">
             КРЕДИТОРСКАЯ ЗАДОЛЖЕННОСТЬ
           </h2>
+          {items.length > 0 && (
+            <span className="text-[10px] text-zinc-500 font-medium">
+              {items.length} {items.length === 1 ? "категория" : "категорий"}
+            </span>
+          )}
         </div>
 
         {/* Content Layout */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 min-h-44 flex-1">
-          {/* Left Side: Chart and Button */}
-          <div className="flex flex-col items-center shrink-0">
-            {/* Doughnut Chart */}
-            <div className="relative w-36 h-36 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={48}
-                    outerRadius={70}
-                    paddingAngle={0}
-                    dataKey="summa"
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    {chartData.map((item, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={item.color}
-                        stroke="none"
-                        style={{ outline: "none" }}
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+          {/* Left Side: Chart */}
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={46}
+                  outerRadius={64}
+                  paddingAngle={chartData.length > 1 ? 1 : 0}
+                  dataKey="summa"
+                  startAngle={90}
+                  endAngle={-270}
+                >
+                  {chartData.map((item, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={item.color}
+                      stroke="none"
+                      style={{ outline: "none" }}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
 
-              {/* Center Text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-1">
-                <span className="text-lg sm:text-xl font-extrabold text-zinc-100 leading-none">
-                  {totalFormatted}
-                </span>
-                <span className="text-[9px] text-zinc-400 font-bold uppercase mt-1 leading-none">
-                  {unit}
-                </span>
-                <span className="text-[9px] text-zinc-500 font-medium mt-0.5 leading-none">
-                  всего
-                </span>
-              </div>
+            {/* Center Text */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-1">
+              <span className="text-lg sm:text-xl font-extrabold text-zinc-100 leading-none">
+                {totalFormatted}
+              </span>
+              <span className="text-[8.5px] text-zinc-400 font-bold uppercase mt-1 leading-none">
+                {unit}
+              </span>
+              <span className="text-[8.5px] text-zinc-500 font-medium mt-0.5 leading-none">
+                всего
+              </span>
             </div>
-
-            {/* Подробнее Button */}
-            <button className="mt-3 px-5 py-1.5 bg-blue-600/90 hover:bg-blue-600 text-zinc-100 text-xs font-medium rounded-lg transition-colors shadow-sm cursor-pointer">
-              Подробнее
-            </button>
           </div>
 
-          {/* Right Side: Data Legend */}
-          <div className="w-full flex-1 flex flex-col justify-center gap-2.5 max-h-48 overflow-y-auto pr-1">
-            {items.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-2.5">
-                {/* Color Box */}
-                <span
-                  className="w-3 h-3 rounded-xs shrink-0 mt-0.5"
-                  style={{ backgroundColor: item.color }}
-                />
+          {/* Right Side: Data Legend Table */}
+          <div className="w-full flex-1 min-w-0 flex flex-col justify-between h-full">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-2 text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1.5 pb-1 border-b border-zinc-800/30">
+              <div className="col-span-6 truncate">КАТЕГОРИЯ</div>
+              <div className="col-span-4 text-right truncate">Сумма, сум</div>
+              <div className="col-span-2 text-right">%</div>
+            </div>
 
-                {/* Info */}
-                <div className="flex flex-col leading-tight min-w-0">
-                  <span className="text-zinc-300 text-xs font-normal truncate" title={item.name}>
-                    {item.name}
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-zinc-100 text-xs font-semibold font-mono">
-                      {formatSuma(item.summa)}
-                    </span>
-                    <span className="text-zinc-400 text-xs font-normal">
-                      ({item.foiz}%)
+            {/* Scrollable Items */}
+            <div className="flex flex-col divide-y divide-zinc-800/15 max-h-48 sm:max-h-52 overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(113,113,122,0.4)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-700/60 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+              {items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-12 gap-2 py-1.5 items-center hover:bg-zinc-800/20 transition-all duration-200 rounded px-1 -mx-1"
+                >
+                  <div className="col-span-6 flex items-center gap-2 min-w-0">
+                    <span
+                      className="w-2.5 h-2.5 rounded-xs shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-zinc-200 font-medium text-xs truncate" title={item.name}>
+                      {item.name}
                     </span>
                   </div>
+                  <div className="col-span-4 text-right text-zinc-300 font-mono text-xs font-semibold">
+                    {formatSuma(item.summa)}
+                  </div>
+                  <div className="col-span-2 text-right text-zinc-400 font-mono text-xs font-medium">
+                    {item.foiz}%
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Row */}
+            {items.length > 0 && (
+              <div className="grid grid-cols-12 gap-2 py-1.5 mt-1 border-t border-zinc-800/60 font-semibold items-center">
+                <div className="col-span-6 text-zinc-300 font-semibold text-[11px] uppercase tracking-wide">
+                  ИТОГО
+                </div>
+                <div className="col-span-4 text-right text-zinc-100 font-mono text-xs font-bold">
+                  {formatSuma(totalSumma)}
+                </div>
+                <div className="col-span-2 text-right text-zinc-400 font-mono text-xs font-bold">
+                  100%
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
